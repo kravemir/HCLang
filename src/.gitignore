@@ -1,0 +1,10 @@
+build
+HCLang
+*.o
+.depend
+lexdebug
+pardebug
+astdebug
+decl.ll
+Session.vim
+*.kdev4
