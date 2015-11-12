@@ -3,7 +3,9 @@ type Square     = ( length : int )
 type Rectangle  = ( width : int, height : int )
 type Shape      = Circle | Square | Rectangle
 
-type XMLNode = { String : int | String } 
+# self recursive structures
+# TODO: indirect recursive structure
+type XMLNode = { String : ( String | XMLNode ) }
 
 fn toShape( element : XMLNode ) Shape:
     let result = match element['type']:
