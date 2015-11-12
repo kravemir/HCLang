@@ -5,7 +5,11 @@ type Shape      = Circle | Square | Rectangle
 
 # self recursive structures
 # TODO: indirect recursive structure
-type XMLNode = { String : ( String | XMLNode ) }
+type XMLNode = group:
+    var args : { String : String }
+    var contents : XMLNode | String | None = none
+
+    operator[](self, id) => self.args[id]
 
 fn toShape( element : XMLNode ) Shape:
     let result = match element['type']:
@@ -23,8 +27,8 @@ fn toString ( shape : Shape ) String:
 
 procedure main():
     let elements : XMLNode[] = [
-        { 'type' : 'circle', 'radius' : 2 },
-        { 'type' : 'square', 'length' : 5 },
-        { 'type' : 'rectangle', 'width' : 3, 'height' : 2 }
+        ({ 'type' : 'circle', 'radius' : 2 }),
+        ({ 'type' : 'square', 'length' : 5 }),
+        ({ 'type' : 'rectangle', 'width' : 3, 'height' : 2 })
     ]
     stdout ! print( '\n'.join(elements.map(toString).map(toShape)))
