@@ -25,6 +25,8 @@
 
 #include <stdio.h>
 
+#include <ast/ast.h>
+
 Parser::Parser(const std::vector<Token> &tokens, std::ostream *out):
     tokens(tokens),
     _current_idx(0),
@@ -142,6 +144,12 @@ Statement* Parser::pathPrefixStatement(){
         return bindStatement(p);
     case Token::EXCLAMATION_MARK:
         return sendStatement(p);
+    case Token::OPEN_PARENTHESIS:
+        {
+            TupleAST *call = tuple();
+            expectConsume(Token::NEWLINE);
+            return new ExprStmt(new CallExpr(new VarExpr(p[0]),call));
+        }
     default:
         errorExpansion("Unexpected token at expasion of path prefix statement");
         return 0;
@@ -237,10 +245,15 @@ VarDecl*   Parser::varStatement() {
     if( !expectConsume(Token::VAR)
         || !expect(Token::IDENTIFIER) ) return 0;
     std::string name = currentConsume().str_val;
+    MTypeAST *type;
 
-    if( !expectConsume( Token::COLON )) return 0;
+    if( tryConsume( Token::COLON ))
+        type = typeDecl();
 
-    MTypeAST *type = typeDecl();
+
+    if( tryConsume(Token::ASSIGN)) {
+        MValueAST *val = value();
+    }
 
     expectConsume(Token::NEWLINE);
 
@@ -322,6 +335,10 @@ SlotDecl*        Parser::slotDecl() {
 
     std::string name = currentConsume().str_val;
     MTupleTypeAST *args = argsDecl();
+    MTypeAST *type = 0;
+
+    if( this->type() != Token::COLON )
+        type = typeDecl();
 
     if( !expectConsume(Token::COLON) 
         || !expectConsume(Token::NEWLINE)
@@ -345,6 +362,18 @@ ProcedureDecl*        Parser::procedureDecl() {
 
     std::string name = currentConsume().str_val;
     MTupleTypeAST *args = argsDecl();
+    MTypeAST *type = 0;
+
+    bool async = false;
+    if( this->type() != Token::COLON ) {
+        if(tryConsume(Token::ASYNC)) {
+            async = true;
+        } else {
+            type = typeDecl();
+            async = tryConsume(Token::ASYNC);
+        }
+    }
+
 
     if( !expectConsume(Token::COLON) 
         || !expectConsume(Token::NEWLINE)
@@ -360,7 +389,7 @@ ProcedureDecl*        Parser::procedureDecl() {
             break;
     }
 
-    return new ProcedureDecl( name, args, stmts);
+    return new ProcedureDecl( name, args, stmts, async);
 }
 
 MTupleTypeAST*    Parser::argsDecl() {
@@ -382,6 +411,10 @@ MValueAST*   Parser::value() {
     switch(type()){
         case Token::SPAWN:
             return spawnExpr();
+        case Token::AWAIT:
+            consume();
+            // TODO
+            return condExpr();
         default:
             return condExpr();
     }
@@ -456,9 +489,16 @@ Q_TRAILER:
             val = new GetChildAST(val,currentConsume().str_val); // TODO
             goto Q_TRAILER;
         default:
-            return val;
+            goto Q_END;
     }
     goto Q_TRAILER;
+
+Q_END:
+    if(tryConsume(Token::EXCLAMATION_MARK)) {
+        consume();
+        tuple();
+    }
+    return val;
 }
 
 MValueAST*   Parser::atom() {

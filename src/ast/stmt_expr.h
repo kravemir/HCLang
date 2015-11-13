@@ -20,23 +20,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_AST_H
-#define HCLANG_AST_AST_H
+#ifndef HCLANG_AST_STMT_EXPR_H
+#define HCLANG_AST_STMT_EXPR_H
 
 #include "base.h"
 
-#include "array.h"
-#include "tuple.h"
-#include "union.h"
-#include "system.h"
+class ExprStmt : public Statement {
+public:
+    ExprStmt(MValueAST *value):
+        value(value)
+    {}
 
-#include "slot.h"
-#include "procedure.h"
+    virtual void codegen(Context *ctx);
+    virtual void print(Printer &p) const;
 
-#include "stmt_let.h"
-#include "stmt_send.h"
-#include "stmt_expr.h"
+private:
+    MValueAST *value;
+};
 
-#include "expr_binop.h"
 
-#endif // HCLANG_AST_AST_H
+#endif // HCLANG_AST_STMT_EXPR_H

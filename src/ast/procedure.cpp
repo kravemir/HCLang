@@ -22,22 +22,48 @@
  */
 #include "procedure.h"
 
+#include "tuple.h"
+
 using namespace llvm;
 
 void ProcedureDecl::codegen(Context *_ctx) {
     Context ctx (_ctx);
     std::vector<llvm::Type*> args;
+    std::vector<MValueType*> types;
+    for( auto &v : this->args->namedValues ) {
+        auto t = v.second->codegen(&ctx);
+        types.push_back(t);
+        args.push_back(t->llvmType());
+    }
+
     llvm::FunctionType *FT = llvm::FunctionType::get(
             llvm::Type::getVoidTy(llvm::getGlobalContext()), args, false);
 
     Function *F = Function::Create(FT, Function::ExternalLinkage, ctx.storage->prefix + name, ctx.storage->module);
 
+    // TODO - type, return !!!
+    auto *ft = new MFunctionType();
+    ft->retType = new IntType();
+    _ctx->bindValue(name, new MValue({
+                ft,
+                F
+        }));
+
     // Create a new basic block to start insertion into.
     BasicBlock *BB = BasicBlock::Create(getGlobalContext(), "entry", F);
     Builder.SetInsertPoint(BB);
+
+    auto it = F->arg_begin();
+    for( int i = 0; i < this->args->namedValues.size(); i++, it++ ) {
+        auto v = this->args->namedValues[i];
+        Value *valPtr = it;
+        ctx.bindValue(v.first,new MValue({ types[i], valPtr}));
+    }
     
     for(Statement *stmt : *stmts)
         stmt->codegen(&ctx);
 
     Builder.CreateRetVoid();
+
+    F->dump();
 }
