@@ -28,6 +28,8 @@ using namespace llvm;
 
 void ProcedureDecl::codegen(Context *_ctx) {
     Context ctx (_ctx);
+    MValueType *returnType = this->returnType->codegen(_ctx);
+    
     std::vector<llvm::Type*> args;
     std::vector<MValueType*> types;
     for( auto &v : this->args->namedValues ) {
@@ -36,18 +38,12 @@ void ProcedureDecl::codegen(Context *_ctx) {
         args.push_back(t->llvmType());
     }
 
-    llvm::FunctionType *FT = llvm::FunctionType::get(
-            llvm::Type::getVoidTy(llvm::getGlobalContext()), args, false);
+    llvm::FunctionType *FT = llvm::FunctionType::get(returnType->llvmType(), args, false);
 
     Function *F = Function::Create(FT, Function::ExternalLinkage, ctx.storage->prefix + name, ctx.storage->module);
 
-    // TODO - type, return !!!
-    auto *ft = new MFunctionType();
-    ft->retType = new IntType();
-    _ctx->bindValue(name, new MValue({
-                ft,
-                F
-        }));
+    auto *ft = new ProcedureType(FT,returnType);
+    _ctx->bindValue(name, new MValue({ft,F}));
 
     // Create a new basic block to start insertion into.
     BasicBlock *BB = BasicBlock::Create(getGlobalContext(), "entry", F);
@@ -56,8 +52,8 @@ void ProcedureDecl::codegen(Context *_ctx) {
     auto it = F->arg_begin();
     for( int i = 0; i < this->args->namedValues.size(); i++, it++ ) {
         auto v = this->args->namedValues[i];
-        Value *valPtr = it;
-        ctx.bindValue(v.first,new MValue({ types[i], valPtr}));
+        it->setName(v.first);
+        ctx.bindValue(v.first,new MValue({ types[i], it}));
     }
     
     for(Statement *stmt : *stmts)

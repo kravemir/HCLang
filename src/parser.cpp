@@ -389,7 +389,8 @@ ProcedureDecl*        Parser::procedureDecl() {
             break;
     }
 
-    return new ProcedureDecl( name, args, stmts, async);
+    if(!type) type = new MVoidTypeAST();
+    return new ProcedureDecl( name, args, type, stmts, async);
 }
 
 MTupleTypeAST*    Parser::argsDecl() {

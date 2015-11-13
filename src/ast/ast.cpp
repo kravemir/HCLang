@@ -43,8 +43,8 @@ MValue* VarExpr::codegen(Context *ctx, MValueType *type) {
 }
 MValue* CallExpr::codegen(Context *ctx, MValueType *type) {
     MValue *v = val->codegen(ctx);
-    MFunctionType *ft = dynamic_cast<MFunctionType*>(v->type);
-    if( ft == 0 ) { 
+    MValueType *ft = v->type;
+    if( !ft->callable ) { 
         std::cerr << "Can't use as function\n" << std::endl;
     }
     std::vector<Value *> argsV;
@@ -53,7 +53,7 @@ MValue* CallExpr::codegen(Context *ctx, MValueType *type) {
         argsV.push_back(a->codegen(ctx)->value());
     }
 
-    MValue * val = new MValue({ft->retType,Builder.CreateCall(v->value(), argsV, "calltmp")});
+    MValue * val = new MValue({ft->callReturnType(),Builder.CreateCall(v->value(), argsV, "calltmp")});
     if( type )
         return type->createCast(ctx,val);
     return val;
@@ -95,7 +95,7 @@ MValue* StringAST::codegen(Context *ctx, MValueType *type) {
 
 
     std::vector<llvm::Constant*> indices(2,zero);
-    MValue *vval = new MValue({new StringType,ConstantExpr::getGetElementPtr(ltype, var, indices)});
+    MValue *vval = new MValue({new StringType(llvm::Type::getInt8PtrTy(ctx->storage->module->getContext())),ConstantExpr::getGetElementPtr(ltype, var, indices)});
     if(type)
         vval = type->createCast(ctx,vval);
     return vval;
@@ -103,7 +103,7 @@ MValue* StringAST::codegen(Context *ctx, MValueType *type) {
 }
 MValue* IntegerAST::codegen(Context *ctx, MValueType *type) {
     return new MValue({
-        new IntType(),
+        new IntType(llvm::Type::getInt64Ty(ctx->storage->module->getContext())),
         ConstantInt::get(getGlobalContext(),APInt((unsigned)32,val))
     });
 }
