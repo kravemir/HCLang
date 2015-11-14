@@ -30,7 +30,6 @@ using namespace llvm;
 #include "llvm/ADT/ArrayRef.h"
 
 void SendStmt::codegen(Context *ctx) {
-    LLVMContext &lctx = getGlobalContext();
     Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(lctx));
 
     if(target[0] == "stdout"  ) { // TODO

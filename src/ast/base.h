@@ -263,13 +263,14 @@ private:
 
 class SpawnExpr : public MValueAST {
 public:
-    SpawnExpr(std::string str);
+    SpawnExpr(std::string str, TupleAST *spawnArgs);
 
     virtual MValue* codegen(Context *ctx, MValueType *type = 0);
     virtual std::string toString() const;
 
 private:
     std::string name;
+    TupleAST *spawnArgs;
 };
 
 class IntegerAST : public MValueAST {

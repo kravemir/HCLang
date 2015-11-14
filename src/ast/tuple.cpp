@@ -24,16 +24,18 @@
 
 using namespace llvm;
 
-Type* TupleType::llvmType() const {
+
+TupleType* TupleType::create ( std::vector< std::pair< std::string, MValueType* > > namedValues, std::string name ) {
     std::vector<Type*> types;
-    for( MValueType *vast : this->values ) {
+    /* TODO for( MValueType *vast : this->values ) {
         types.push_back(vast->llvmType());
-    }
-    for( auto vast : this->namedValues ) {
+    }*/
+    for( auto vast : namedValues ) {
         types.push_back(vast.second->llvmType());
     }
-    StructType *st = StructType::create(lctx, types, "tuple");
-    return PointerType::get(st,0);
+    StructType *st = StructType::create(lctx, types, name);
+    TupleType * type = new TupleType(PointerType::get(st,0), namedValues);
+    return type;
 }
 MValue* TupleType::createConstructor(Context *ctx) {
     std::vector<Type*> types;
@@ -107,7 +109,7 @@ MValueType* MTupleTypeAST::codegen(Context *ctx) {
     std::vector<std::pair<std::string,MValueType*>> namedValues;
     for( auto tt : this->namedValues )
         namedValues.push_back(std::make_pair(tt.first,tt.second->codegen(ctx)));
-    return new TupleType(namedValues);
+    return TupleType::create(namedValues);
 };
 
 MValue* TupleAST::codegen(Context *ctx, MValueType *type) {
@@ -124,7 +126,7 @@ MValue* TupleAST::codegen(Context *ctx, MValueType *type) {
         types.push_back(v->type->llvmType());
         namedValues.push_back(std::make_pair("",v->type));
     }
-    TupleType *ttt = new TupleType(namedValues);
+    TupleType *ttt = TupleType::create(namedValues);
     StructType *st = StructType::create(lctx, types, "tuple");
     std::vector<llvm::Constant*> indices({
             ConstantInt::get(lctx, APInt((unsigned)32,(uint64_t)1))

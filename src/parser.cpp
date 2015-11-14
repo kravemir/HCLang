@@ -57,16 +57,15 @@ bool Parser::expect(Token::Type type) {
     if( this->type() == type ) {
         return true;
     } else {
-        errorExpansion("expected " + getTokenTypeName(type));
+        errorExpansion("expected " + getTokenTypeName(type) + ", got " + getTokenTypeName(this->type()));
         return false;
     }
 }
 bool Parser::expectConsume(Token::Type type) {
-    if( this->type() == type ) {
+    if( expect(type) ) {
         consume();
         return true;
     } else {
-        errorExpansion("expected " + getTokenTypeName(type));
         return false;
     }
 }
@@ -115,7 +114,12 @@ Statement* Parser::statement(){
     case Token::RETURN:
         return returnStatement();
     default:
-        errorExpansion("Unexpected token at expasion of statement");
+        //errorExpansion("Unexpected token at expasion of statement");
+        {
+            MValueAST *val = value();
+            if(!val || !expectConsume(Token::NEWLINE)) return 0;
+            return new ExprStmt(val);
+        }
         return 0;
     }
 }
@@ -423,7 +427,11 @@ MValueAST*   Parser::value() {
 
 SpawnExpr*  Parser::spawnExpr() {
     if(!expectConsume(Token::SPAWN) || !expect(Token::IDENTIFIER)) return 0;
-    return new SpawnExpr(currentConsume().str_val);
+    std::string str = currentConsume().str_val;
+    TupleAST *tuple = 0;
+    if(type() == Token::OPEN_PARENTHESIS)
+        tuple = this->tuple();
+    return new SpawnExpr(str,tuple);
 }
 
 MValueAST* Parser::condExpr() {

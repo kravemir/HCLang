@@ -31,6 +31,18 @@ struct ProcedureType : MValueType {
     {}
 };
 
+struct ProcedureAsyncInstanceType : MValueType {
+    ProcedureAsyncInstanceType(llvm::Type* _llvmType):
+        MValueType(_llvmType)
+    {}
+};
+
+struct ProcedureAsyncType : MValueType {
+    ProcedureAsyncType(llvm::Type* _llvmType, MValueType *retType):
+        MValueType(_llvmType,true,retType)
+    {}
+};
+
 class ProcedureDecl : public Statement {
 public:
     ProcedureDecl( std::string name, MTupleTypeAST *args, MTypeAST *retType, StatementList *list, bool async ):

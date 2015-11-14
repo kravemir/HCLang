@@ -61,24 +61,35 @@ MValue* CallExpr::codegen(Context *ctx, MValueType *type) {
 }
 MValue* SpawnExpr::codegen(Context *ctx, MValueType *type) {
     MValue* v = ctx->getValue(name);
-    SystemType *t;
-    if(v) {
-        t = dynamic_cast<SystemType*>(v->type);
-        if( !t ) {
-            std::cerr << name << " is not system type\n";
-        }
-    } else {
-        std::cerr << "System `" << name << "` not found\n";
+    assert(v);
+    
+    SystemType *system_type = dynamic_cast<SystemType*>(v->type);
+    ProcedureAsyncType *procedure_type = dynamic_cast<ProcedureAsyncType*>(v->type);
+    if( system_type ) {
+        Function *create_fn = system_type->fn_new;
+        GlobalValue* executor = ctx->storage->module->getNamedValue("executor");
+        Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(getGlobalContext()));
+        std::vector<llvm::Value*> indices(1,zero);
+        std::vector<Value *> ArgsV({Builder.CreateLoad(Builder.CreateGEP(executor,indices,"global_executor"))});
+
+        return new MValue({system_type, Builder.CreateCall(create_fn, ArgsV)});
+    } else if(procedure_type) {
+        GlobalValue* executor = ctx->storage->module->getNamedValue("executor");
+        Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(getGlobalContext()));
+        std::vector<llvm::Value*> indices(1,zero);
+        std::vector<Value *> ArgsV({Builder.CreateLoad(Builder.CreateGEP(executor,indices,"global_executor"))});
+        
+        Value *procinst = Builder.CreateCall(v->value(), ArgsV, "procedure_instance");
+        Function *finit = ctx->storage->module->getFunction("system_putMsg");
+        std::vector<llvm::Value*> aadices({
+            procinst,
+            ConstantInt::get(lctx,APInt((unsigned)32,0)),
+            spawnArgs->codegen(ctx)->value()
+        });
+        Builder.CreateCall(finit,aadices);
         return 0;
     }
-
-    Function *create_fn = t->fn_new;
-    GlobalValue* executor = ctx->storage->module->getNamedValue("executor");
-    Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(getGlobalContext()));
-    std::vector<llvm::Value*> indices(1,zero);
-    std::vector<Value *> ArgsV({Builder.CreateLoad(Builder.CreateGEP(executor,indices,"global_executor"))});
-
-    return new MValue({t, Builder.CreateCall(create_fn, ArgsV)});
+    assert(0);
 }
 MValue* StringAST::codegen(Context *ctx, MValueType *type) {
     Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(lctx));
