@@ -97,6 +97,8 @@ map<Token::Type, const char *> _tokenNames()
     n[Token::SHORT_DEF] = "=>";
     n[Token::TYPE] = "type";
     n[Token::LET] = "let";
+    n[Token::ASYNC] = "async";
+    n[Token::AWAIT] = "await";
 
 
     addSymbolToken(n,";");
@@ -164,6 +166,8 @@ map<string,Token::Type> stringTokens()
     m["type"] = Token::TYPE;
     m["case"] = Token::CASE;
     m["let"] = Token::LET;
+    m["async"] = Token::ASYNC;
+    m["await"] = Token::AWAIT;
 
     return m;
 }

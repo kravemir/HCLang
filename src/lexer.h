@@ -67,7 +67,7 @@ struct Token {
         // operations / commands
         RETURN, 
         
-        SHORT_DEF, LET,
+        SHORT_DEF, LET, ASYNC, AWAIT,
 
 
 

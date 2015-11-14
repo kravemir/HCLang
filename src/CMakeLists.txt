@@ -38,6 +38,7 @@ set ( HCLANG_SRCS
 
     ast/stmt_let.cpp
     ast/stmt_send.cpp
+    ast/stmt_expr.cpp
 
     ast/expr_binop.cpp
 )
@@ -53,6 +54,9 @@ add_custom_target(
     COMMAND clang -cc1 -emit-llvm -o decl.ll ${CMAKE_CURRENT_SOURCE_DIR}/base.h -DEXPORTLL
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/base.h
 )
+
+add_executable( lexdebug lexdebug_main.cpp)
+target_link_libraries( lexdebug HCLang ${llvm_libs} )
 
 add_executable( pardebug pardebug_main.cpp)
 add_dependencies( pardebug decl.ll )

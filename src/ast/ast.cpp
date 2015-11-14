@@ -43,8 +43,8 @@ MValue* VarExpr::codegen(Context *ctx, MValueType *type) {
 }
 MValue* CallExpr::codegen(Context *ctx, MValueType *type) {
     MValue *v = val->codegen(ctx);
-    MFunctionType *ft = dynamic_cast<MFunctionType*>(v->type);
-    if( ft == 0 ) { 
+    MValueType *ft = v->type;
+    if( !ft->callable ) { 
         std::cerr << "Can't use as function\n" << std::endl;
     }
     std::vector<Value *> argsV;
@@ -53,7 +53,7 @@ MValue* CallExpr::codegen(Context *ctx, MValueType *type) {
         argsV.push_back(a->codegen(ctx)->value());
     }
 
-    MValue * val = new MValue({ft->retType,Builder.CreateCall(v->value(), argsV, "calltmp")});
+    MValue * val = new MValue({ft->callReturnType(),Builder.CreateCall(v->value(), argsV, "calltmp")});
     if( type )
         return type->createCast(ctx,val);
     return val;
@@ -61,24 +61,35 @@ MValue* CallExpr::codegen(Context *ctx, MValueType *type) {
 }
 MValue* SpawnExpr::codegen(Context *ctx, MValueType *type) {
     MValue* v = ctx->getValue(name);
-    SystemType *t;
-    if(v) {
-        t = dynamic_cast<SystemType*>(v->type);
-        if( !t ) {
-            std::cerr << name << " is not system type\n";
-        }
-    } else {
-        std::cerr << "System `" << name << "` not found\n";
+    assert(v);
+    
+    SystemType *system_type = dynamic_cast<SystemType*>(v->type);
+    ProcedureAsyncType *procedure_type = dynamic_cast<ProcedureAsyncType*>(v->type);
+    if( system_type ) {
+        Function *create_fn = system_type->fn_new;
+        GlobalValue* executor = ctx->storage->module->getNamedValue("executor");
+        Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(getGlobalContext()));
+        std::vector<llvm::Value*> indices(1,zero);
+        std::vector<Value *> ArgsV({Builder.CreateLoad(Builder.CreateGEP(executor,indices,"global_executor"))});
+
+        return new MValue({system_type, Builder.CreateCall(create_fn, ArgsV)});
+    } else if(procedure_type) {
+        GlobalValue* executor = ctx->storage->module->getNamedValue("executor");
+        Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(getGlobalContext()));
+        std::vector<llvm::Value*> indices(1,zero);
+        std::vector<Value *> ArgsV({Builder.CreateLoad(Builder.CreateGEP(executor,indices,"global_executor"))});
+        
+        Value *procinst = Builder.CreateCall(v->value(), ArgsV, "procedure_instance");
+        Function *finit = ctx->storage->module->getFunction("system_putMsg");
+        std::vector<llvm::Value*> aadices({
+            procinst,
+            ConstantInt::get(lctx,APInt((unsigned)32,0)),
+            spawnArgs->codegen(ctx)->value()
+        });
+        Builder.CreateCall(finit,aadices);
         return 0;
     }
-
-    Function *create_fn = t->fn_new;
-    GlobalValue* executor = ctx->storage->module->getNamedValue("executor");
-    Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(getGlobalContext()));
-    std::vector<llvm::Value*> indices(1,zero);
-    std::vector<Value *> ArgsV({Builder.CreateLoad(Builder.CreateGEP(executor,indices,"global_executor"))});
-
-    return new MValue({t, Builder.CreateCall(create_fn, ArgsV)});
+    assert(0);
 }
 MValue* StringAST::codegen(Context *ctx, MValueType *type) {
     Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(lctx));
@@ -95,7 +106,7 @@ MValue* StringAST::codegen(Context *ctx, MValueType *type) {
 
 
     std::vector<llvm::Constant*> indices(2,zero);
-    MValue *vval = new MValue({new StringType,ConstantExpr::getGetElementPtr(ltype, var, indices)});
+    MValue *vval = new MValue({new StringType(llvm::Type::getInt8PtrTy(ctx->storage->module->getContext())),ConstantExpr::getGetElementPtr(ltype, var, indices)});
     if(type)
         vval = type->createCast(ctx,vval);
     return vval;
@@ -103,7 +114,7 @@ MValue* StringAST::codegen(Context *ctx, MValueType *type) {
 }
 MValue* IntegerAST::codegen(Context *ctx, MValueType *type) {
     return new MValue({
-        new IntType(),
+        new IntType(llvm::Type::getInt64Ty(ctx->storage->module->getContext())),
         ConstantInt::get(getGlobalContext(),APInt((unsigned)32,val))
     });
 }

@@ -29,14 +29,19 @@ struct TupleType : MValueType {
     std::vector<MValueType*> values;
     std::vector<std::pair<std::string,MValueType*>> namedValues;
 
-    TupleType( std::vector<std::pair<std::string,MValueType*>> namedValues):
-        namedValues(namedValues)
-    {}
 
     virtual MValue* getChild(MValue *src, std::string name);
-    virtual llvm::Type* llvmType() const;
     int getIndex(std::string name);
     virtual MValue* createConstructor(Context *ctx);
+    
+    static TupleType *create( std::vector<std::pair<std::string,MValueType*>> namedValues, std::string name = "tuple");
+    
+private:
+    TupleType() = delete;
+    TupleType( llvm::Type *_llvmType, std::vector<std::pair<std::string,MValueType*>> namedValues):
+        MValueType(_llvmType),
+        namedValues(namedValues)
+    {}
 };
 
 struct MTupleTypeAST : MTypeAST {

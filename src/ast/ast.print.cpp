@@ -38,8 +38,9 @@ std::string VarExpr::toString() const {
 std::string CallExpr::toString() const {
     return val->toString() + "( ... )"; // TODO
 }
-SpawnExpr::SpawnExpr(std::string val):
-    name(val)
+SpawnExpr::SpawnExpr(std::string val,TupleAST *spawnArgs):
+    name(val),
+    spawnArgs(spawnArgs)
 {}
 
 std::string SpawnExpr::toString() const {

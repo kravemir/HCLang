@@ -42,7 +42,20 @@ struct Context;
 struct SystemType;
 
 struct MValueType {
-    virtual llvm::Type* llvmType() const = 0;
+    llvm::Type* const _llvmType;
+    const bool callable;
+    MValueType * const _callReturnType;
+
+    MValueType( llvm::Type* _llvmType = 0, bool callable = false, MValueType *callRet = 0 ):
+        _llvmType(_llvmType),
+        callable(callable),
+        _callReturnType(callRet)
+    {
+        // TODO assert(_llvmType)
+        assert(!callable || _callReturnType);
+    }
+
+    virtual llvm::Type* llvmType() { assert(_llvmType); return _llvmType; }
 
     virtual ~MValueType() {};
 
@@ -54,6 +67,10 @@ struct MValueType {
     virtual MValue* createConstructor(Context *ctx) { return 0; }
 
     virtual MValue* createCast(Context *ctx, MValue *src) { return 0; }
+    virtual MValueType *callReturnType() { 
+        assert(callable);
+        return _callReturnType;
+    };
 };
 
 struct TupleAST;
@@ -61,17 +78,18 @@ struct MTupleTypeAST;
 
 
 struct IntType : MValueType {
-    virtual llvm::Type* llvmType() const {
-        return llvm::Type::getInt32Ty(llvm::getGlobalContext());
-    }
+    IntType(llvm::Type* type) : MValueType(type) { assert(type); };
 };
 struct StringType : MValueType {
-    virtual llvm::Type* llvmType() const {
-        return llvm::Type::getInt8PtrTy(llvm::getGlobalContext());
-    }
+    StringType(llvm::Type* type) : MValueType(type) { assert(type); };
+};
+struct VoidType : MValueType {
+    VoidType(llvm::Type* type) : MValueType(type) { assert(type); };
 };
 
 struct MFunctionType : MValueType {
+    MFunctionType() : MValueType(0,true) {}
+
     MValueType *retType;
     virtual llvm::Type* llvmType() const {
         return 0; // TODO
@@ -183,7 +201,12 @@ public:
     virtual MValueType* codegen(Context *ctx) = 0;
 };
 
-
+class MVoidTypeAST: public MTypeAST {
+public:
+    virtual MValueType* codegen ( Context* ctx ) {
+        return new VoidType(llvm::Type::getVoidTy(llvm::getGlobalContext()));
+    }
+};
 
 class MNameTypeAST : public MTypeAST {
 public:
@@ -193,9 +216,9 @@ public:
 
     virtual MValueType* codegen(Context *ctx) { 
         if( name == "int" )
-            return new IntType();
+            return new IntType(llvm::Type::getInt64Ty(ctx->storage->module->getContext()));
         else if( name == "String" )
-            return new StringType();
+            return new StringType(llvm::Type::getInt8PtrTy(ctx->storage->module->getContext()));
         return ctx->storage->types[name]; 
     };
 
@@ -240,13 +263,14 @@ private:
 
 class SpawnExpr : public MValueAST {
 public:
-    SpawnExpr(std::string str);
+    SpawnExpr(std::string str, TupleAST *spawnArgs);
 
     virtual MValue* codegen(Context *ctx, MValueType *type = 0);
     virtual std::string toString() const;
 
 private:
     std::string name;
+    TupleAST *spawnArgs;
 };
 
 class IntegerAST : public MValueAST {

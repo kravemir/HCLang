@@ -8,5 +8,5 @@ procedure print_async(start : int, end : int) async:
 
 procedure main():
     print(1,10)
-    spawn print_async(2,20)
+    spawn print_async (2,20)
     print(3,30)

@@ -42,7 +42,7 @@ MValue* BinaryOpAST::codegen(Context *ctx, MValueType *type) {
             assert(0);
             return 0;
         }
-        return new MValue({new IntType(), res});
+        return new MValue({new IntType(llvm::Type::getInt64Ty(ctx->storage->module->getContext())), res});
     }
 
     if( dynamic_cast<StringType*>(l->type) && dynamic_cast<StringType*>(r->type) ) {
@@ -53,7 +53,7 @@ MValue* BinaryOpAST::codegen(Context *ctx, MValueType *type) {
         std::vector<llvm::Value*> aadices({
             l->value(), r->value()
         });
-        return new MValue({new StringType(),Builder.CreateCall(fconcat,aadices)});
+        return new MValue({new StringType(llvm::Type::getInt8PtrTy(ctx->storage->module->getContext())),Builder.CreateCall(fconcat,aadices)});
     }
     assert(0);
     return 0;
