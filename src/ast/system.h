@@ -25,10 +25,13 @@
 
 #include "base.h"
 
+class SlotType;
+
 struct SystemType : MValueType {
     int slotCount = 0;
     std::map<std::string,int> slotIds;
     std::vector<llvm::Function*> slots;
+    std::vector<SlotType*> slotTypes;
     llvm::Function *fn_new;
 
     std::vector<std::pair<std::string,MValueType*>> variables;

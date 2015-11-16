@@ -15,7 +15,7 @@ system Requester:
 
     slot init( id : int, counter : Counter ):
         self.counter = counter
-        #self.counter ! request( self.response )
+        self.counter ! request( self.response )
         
     slot response( n : int ):
         stdout ! printfln( "#%d received %d", self.id, n )

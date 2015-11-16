@@ -29,9 +29,10 @@ using namespace llvm;
 
 SlotType* SlotType::create ( Context *ctx, TupleType* argsType ) {
     StructType *st = StructType::create ( lctx, {
+        Type::getInt8PtrTy( lctx ),
         Type::getInt32Ty ( ctx->storage->module->getContext() ),
-        argsType->llvmType()
-    } );
+        //argsType->llvmType()
+    }, "slot" );
     SlotType * type = new SlotType ( st, argsType );
     return type;
 }
@@ -41,10 +42,13 @@ MValueType* SlotTypeAST::codegen ( Context* ctx ) {
 }
 
 void SlotDecl::codegen ( Context *_ctx ) {
+    SystemType *s = _ctx->storage->system;
+    TupleType *slotArgsTuple = s->slotTypes[s->slotIds[name]]->argsTupleType;
+
     Context ctx ( _ctx );
     std::vector<llvm::Type*> args;
     args.push_back ( ctx.storage->system->llvmType() );
-    args.push_back ( this->args->codegen ( &ctx )->llvmType() );
+    args.push_back ( slotArgsTuple->llvmType() );
     llvm::FunctionType *FT = llvm::FunctionType::get (
                                  llvm::Type::getVoidTy ( llvm::getGlobalContext() ), args, false );
 
@@ -71,10 +75,15 @@ void SlotDecl::codegen ( Context *_ctx ) {
         stmt->codegen ( &ctx );
 
     Builder.CreateRetVoid();
-    SystemType *s = ctx.storage->system;
     s->slots.push_back ( F );
+    F->dump();
 }
 void SlotDecl::collectSystemDecl ( Context *ctx ) const {
     SystemType *s = ctx->storage->system;
     s->slotIds[name] = s->slotCount++;
+
+
+    TupleType *slotArgsTuple = this->args->codegen ( ctx );
+    SlotType *type = SlotType::create(ctx,slotArgsTuple);
+    s->slotTypes.push_back ( type );
 }
