@@ -5,8 +5,8 @@ system Counter:
         self.count = start
         stdout ! printfln( "Counter initialized at %d", start )
 
-    slot request( callback : slot(int) ):
-        callback ! (self.count)
+    slot request( callback : slot(result:int) ):
+        #callback ! (self.count)
         self.count = self.count + 1
 
 system Requester:
@@ -15,14 +15,14 @@ system Requester:
 
     slot init( id : int, counter : Counter ):
         self.counter = counter
-        self.counter ! request( self.response )
+        #self.counter ! request( self.response )
         
-    slot response( n : int );
+    slot response( n : int ):
         stdout ! printfln( "#%d received %d", self.id, n )
-        if n < 30:
-            self.counter ! request( self.response )
+        #if n < 30:
+        #    self.counter ! request( self.response )
 
-procedure main() async:
+procedure main():
     # spawn counter
     let counter = spawn Counter
     counter ! init ( 0 )

@@ -573,7 +573,9 @@ MTypeAST*   Parser::baseTypeDecl() {
         case Token::OPEN_PARENTHESIS:
             type = tupleTypeDecl(); break;
         case Token::IDENTIFIER:
-            type = new MNameTypeAST(currentConsume().str_val);
+            type = new MNameTypeAST(currentConsume().str_val);break;
+        case Token::SLOT:
+            type = slotTypeDecl(); break;
         default:;
             // TODO error
     };
@@ -586,6 +588,13 @@ Q_TRAILER:
             return type;
     };
     goto Q_TRAILER;
+}
+
+SlotTypeAST* Parser::slotTypeDecl() {
+    if(!expectConsume(Token::SLOT)) return 0;
+    MTupleTypeAST *tuple = tupleTypeDecl();
+    if(!tuple) return 0;
+    return new SlotTypeAST(tuple);
 }
 
 MTypeAST* Parser::unionTypeDecl() {

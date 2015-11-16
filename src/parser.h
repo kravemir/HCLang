@@ -89,6 +89,7 @@ public:
     MTypeAST*       arrayTypeTrailer(MTypeAST  *type);
 
     Path            path();
+    SlotTypeAST*    slotTypeDecl();
 };
 
 #endif // HCLANG_PARSER_H

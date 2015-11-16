@@ -105,7 +105,7 @@ MValue* TupleType::getChild(MValue *src, std::string name) {
         );
 }
 
-MValueType* MTupleTypeAST::codegen(Context *ctx) {
+TupleType* MTupleTypeAST::codegen(Context *ctx) {
     std::vector<std::pair<std::string,MValueType*>> namedValues;
     for( auto tt : this->namedValues )
         namedValues.push_back(std::make_pair(tt.first,tt.second->codegen(ctx)));

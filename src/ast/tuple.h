@@ -50,7 +50,7 @@ struct MTupleTypeAST : MTypeAST {
         namedValues(namedValues)
     {}
 
-    MValueType* codegen(Context *ctx);
+    TupleType* codegen(Context *ctx);
 
     std::vector<MTypeAST*> types;
     std::vector<std::pair<std::string,MTypeAST*>> namedValues;
