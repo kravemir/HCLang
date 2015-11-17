@@ -55,7 +55,7 @@ struct MValueType {
         assert(!callable || _callReturnType);
     }
 
-    virtual llvm::Type* llvmType() { assert(_llvmType); return _llvmType; }
+    virtual llvm::Type* llvmType() const { assert(_llvmType); return _llvmType; }
 
     virtual ~MValueType() {};
 

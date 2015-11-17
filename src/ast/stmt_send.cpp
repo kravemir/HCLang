@@ -26,6 +26,7 @@ using namespace llvm;
 
 #include "tuple.h"
 #include "system.h"
+#include "slot.h"
 
 #include "llvm/ADT/ArrayRef.h"
 
@@ -69,21 +70,31 @@ void SendStmt::codegen(Context *ctx) {
         if(!ma) {
             std::cerr << "Can't find connection of `" << target[0] << "`\n";
         } else {
-            SystemType *t = dynamic_cast<SystemType*>(ma->type);
-            MValue *v_args = args->codegen(ctx);
+            SystemType *system_type = dynamic_cast<SystemType*>(ma->type);
+            SlotType *slot_type = dynamic_cast<SlotType*>(ma->type);
 
-            if( !t ) {
-                std::cerr << "Can't use as system\n" << std::endl;
-                return;
+            if(system_type) {
+                MValue *v_args = args->codegen(ctx);
+
+                Function *finit = ctx->storage->module->getFunction("system_putMsg");
+                std::vector<llvm::Value*> aadices({
+                    ma->value(),
+                    ConstantInt::get(lctx,APInt((unsigned)32,(uint64_t)system_type->slotIds[msg])),
+                    v_args ? v_args->value() : zero
+                });
+                Builder.CreateCall(finit,aadices);
+            } else {
+                MValue *v_args = args->codegen(ctx);
+
+                ma->value()->dump();
+                Function *finit = ctx->storage->module->getFunction("system_putMsg");
+                std::vector<llvm::Value*> aadices({
+                    Builder.CreateLoad(Builder.CreateGEP(ma->value(), { (Value*)ConstantInt::get(lctx,APInt(32,(uint64_t)0)), (Value*)ConstantInt::get(lctx,APInt(32,(uint64_t)0))})),
+                    Builder.CreateLoad(Builder.CreateGEP(ma->value(), { (Value*)ConstantInt::get(lctx,APInt(32,(uint64_t)0)), (Value*)ConstantInt::get(lctx,APInt(32,(uint64_t)1))})),
+                    v_args ? v_args->value() : zero
+                });
+                Builder.CreateCall(finit,aadices);
             }
-
-            Function *finit = ctx->storage->module->getFunction("system_putMsg");
-            std::vector<llvm::Value*> aadices({
-                ma->value(),
-                ConstantInt::get(lctx,APInt((unsigned)32,(uint64_t)t->slotIds[msg])),
-                v_args ? v_args->value() : zero
-            });
-            Builder.CreateCall(finit,aadices);
         }
     }
 }

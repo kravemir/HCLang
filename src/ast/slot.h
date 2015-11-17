@@ -24,19 +24,46 @@
 #define HCLANG_AST_SLOT_H
 
 #include "base.h"
+#include "tuple.h"
+
+class SlotType : public MValueType {
+public:
+    static SlotType* create ( Context *ctx, TupleType *argsType );
+
+private:
+    SlotType ( llvm::Type* _llvmType, TupleType *argsTupleType ) :
+        MValueType ( _llvmType,false,0 ),
+        argsTupleType ( argsTupleType )
+    {}
+
+public:
+    TupleType* const argsTupleType;
+};
+
+class SlotTypeAST : public MTypeAST {
+public:
+    SlotTypeAST ( MTupleTypeAST *args ) :
+        args ( args )
+    {}
+
+    virtual MValueType* codegen ( Context* ctx );
+
+public:
+    MTupleTypeAST* const args;
+};
 
 class SlotDecl : public Statement {
 public:
-    SlotDecl( std::string name, MTupleTypeAST *args, StatementList *list ):
-        name(name),
-        args(args),
-        stmts(list)
+    SlotDecl ( std::string name, MTupleTypeAST *args, StatementList *list ) :
+        name ( name ),
+        args ( args ),
+        stmts ( list )
     {}
 
-    virtual void codegen(Context *ctx);
+    virtual void codegen ( Context *ctx );
 
-    virtual void print(Printer &p) const;
-    virtual void collectSystemDecl(Context *ctx) const;
+    virtual void print ( Printer &p ) const;
+    virtual void collectSystemDecl ( Context *ctx ) const;
 private:
     std::string name;
     MTupleTypeAST *args;

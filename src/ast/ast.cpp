@@ -115,7 +115,7 @@ MValue* StringAST::codegen(Context *ctx, MValueType *type) {
 MValue* IntegerAST::codegen(Context *ctx, MValueType *type) {
     return new MValue({
         new IntType(llvm::Type::getInt64Ty(ctx->storage->module->getContext())),
-        ConstantInt::get(getGlobalContext(),APInt((unsigned)32,val))
+        ConstantInt::get(getGlobalContext(),APInt((unsigned)64,val))
     });
 }
 

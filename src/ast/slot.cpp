@@ -27,44 +27,66 @@
 
 using namespace llvm;
 
-void SlotDecl::codegen(Context *_ctx) {
-    Context ctx (_ctx);
-    std::vector<llvm::Type*> args;
-    args.push_back(ctx.storage->system->llvmType());
-    args.push_back(this->args->codegen(&ctx)->llvmType());
-    llvm::FunctionType *FT = llvm::FunctionType::get(
-        llvm::Type::getVoidTy(llvm::getGlobalContext()), args, false);
+SlotType* SlotType::create ( Context *ctx, TupleType* argsType ) {
+    StructType *st = StructType::create ( lctx, {
+        Type::getInt8PtrTy( lctx ),
+        Type::getInt32Ty ( ctx->storage->module->getContext() ),
+        //argsType->llvmType()
+    }, "slot" );
+    SlotType * type = new SlotType ( st, argsType );
+    return type;
+}
 
-    Function *F = Function::Create(FT, Function::PrivateLinkage, ctx.storage->prefix + name, ctx.storage->module);
+MValueType* SlotTypeAST::codegen ( Context* ctx ) {
+    return SlotType::create ( ctx, args->codegen ( ctx ) );
+}
+
+void SlotDecl::codegen ( Context *_ctx ) {
+    SystemType *s = _ctx->storage->system;
+    TupleType *slotArgsTuple = s->slotTypes[s->slotIds[name]]->argsTupleType;
+
+    Context ctx ( _ctx );
+    std::vector<llvm::Type*> args;
+    args.push_back ( ctx.storage->system->llvmType() );
+    args.push_back ( slotArgsTuple->llvmType() );
+    llvm::FunctionType *FT = llvm::FunctionType::get (
+                                 llvm::Type::getVoidTy ( llvm::getGlobalContext() ), args, false );
+
+    Function *F = Function::Create ( FT, Function::PrivateLinkage, ctx.storage->prefix + name, ctx.storage->module );
 
     // Create a new basic block to start insertion into.
-    BasicBlock *BB = BasicBlock::Create(getGlobalContext(), "entry", F);
-    Builder.SetInsertPoint(BB);
+    BasicBlock *BB = BasicBlock::Create ( getGlobalContext(), "entry", F );
+    Builder.SetInsertPoint ( BB );
 
-    ctx.bindValue("self", new MValue( { ctx.storage->system, F->arg_begin()} ) );
-    for( int i = 0; i < this->args->namedValues.size(); i++ ) {
+    ctx.bindValue ( "self", new MValue ( { ctx.storage->system, F->arg_begin() } ) );
+    for ( int i = 0; i < this->args->namedValues.size(); i++ ) {
         auto v = this->args->namedValues[i];
-        Value *valPtr = Builder.CreateGEP(
-            //ctx.storage->system->llvmType(),
-            ++(F->arg_begin()),
-            std::vector<llvm::Value*>({
-                ConstantInt::get(lctx,APInt((unsigned)32,(uint64_t)0)),
-                ConstantInt::get(lctx,APInt((unsigned)32,(uint64_t)i)),
-            })
-        );
-        auto type = v.second->codegen(&ctx);
-        ctx.bindValue(v.first,new MValue({ type, Builder.CreateLoad(valPtr)}));
+        std::vector<llvm::Value*> args ( {
+            ConstantInt::get ( lctx,APInt ( ( unsigned ) 32, ( uint64_t ) 0 ) ),
+            ConstantInt::get ( lctx,APInt ( ( unsigned ) 32, ( uint64_t ) i ) ),
+        } );
+        Value *valPtr = Builder.CreateGEP ( ++ ( F->arg_begin() ), args, v.first + "_ptr" );
+        auto type = v.second->codegen ( &ctx );
+        if( dynamic_cast<SlotType*>(slotArgsTuple->namedValues[i].second) == 0 )
+            ctx.bindValue ( v.first,new MValue ( { type, Builder.CreateLoad ( valPtr, v.first ) } ) );
+        else
+            ctx.bindValue ( v.first,new MValue ( { type, valPtr } ) );
     }
 
-    
-    for(Statement *stmt : *stmts)
-        stmt->codegen(&ctx);
+
+    for ( Statement *stmt : *stmts )
+        stmt->codegen ( &ctx );
 
     Builder.CreateRetVoid();
-    SystemType *s = ctx.storage->system;
-    s->slots.push_back(F);
+    s->slots.push_back ( F );
+    F->dump();
 }
-void SlotDecl::collectSystemDecl(Context *ctx) const {
+void SlotDecl::collectSystemDecl ( Context *ctx ) const {
     SystemType *s = ctx->storage->system;
     s->slotIds[name] = s->slotCount++;
+
+
+    TupleType *slotArgsTuple = this->args->codegen ( ctx );
+    SlotType *type = SlotType::create(ctx,slotArgsTuple);
+    s->slotTypes.push_back ( type );
 }

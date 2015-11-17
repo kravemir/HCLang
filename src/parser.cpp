@@ -402,9 +402,12 @@ MTupleTypeAST*    Parser::argsDecl() {
 }
 
 SendStmt*  Parser::sendStatement(Path target) {
-    if( !expectConsume(Token::EXCLAMATION_MARK) || !expect(Token::IDENTIFIER) ) return 0;
+    if( !expectConsume(Token::EXCLAMATION_MARK) ) return 0;
 
-    std::string msg = currentConsume().str_val;
+    std::string msg;
+    if( type() == Token::IDENTIFIER )
+        msg = currentConsume().str_val;
+    
     TupleAST    *call = tuple();
 
     expectConsume(Token::NEWLINE);
@@ -573,7 +576,9 @@ MTypeAST*   Parser::baseTypeDecl() {
         case Token::OPEN_PARENTHESIS:
             type = tupleTypeDecl(); break;
         case Token::IDENTIFIER:
-            type = new MNameTypeAST(currentConsume().str_val);
+            type = new MNameTypeAST(currentConsume().str_val);break;
+        case Token::SLOT:
+            type = slotTypeDecl(); break;
         default:;
             // TODO error
     };
@@ -586,6 +591,13 @@ Q_TRAILER:
             return type;
     };
     goto Q_TRAILER;
+}
+
+SlotTypeAST* Parser::slotTypeDecl() {
+    if(!expectConsume(Token::SLOT)) return 0;
+    MTupleTypeAST *tuple = tupleTypeDecl();
+    if(!tuple) return 0;
+    return new SlotTypeAST(tuple);
 }
 
 MTypeAST* Parser::unionTypeDecl() {

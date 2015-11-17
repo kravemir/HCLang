@@ -24,8 +24,15 @@
 #ifndef HCLANG_BASE_H
 #define HCLANG_BASE_H
 
+
+#define MY_INLINE
+
 #ifndef EXPORTLL
 #include <stdlib.h>
+#include <stdio.h>
+#define MY_INLINE inline
+#else
+int printf(const char * restrict format, ... );
 #endif
 
 #ifdef __cplusplus
@@ -118,18 +125,18 @@ void system_init(
 void* malloc(unsigned long s);
 #endif
 
-inline void connection_reference(Connection *c) {
+MY_INLINE void connection_reference(Connection *c) {
     c->refCounter += 1;
 }
-inline void connection_dereference(Connection *c) {
+MY_INLINE void connection_dereference(Connection *c) {
     c->refCounter--;
     if(c->refCounter == 0)
         c->vtable->destruct(c);
 }
-inline void connection_putMsg(Connection *c, int msg_id, void *data) {
+MY_INLINE void connection_putMsg(Connection *c, int msg_id, void *data) {
     c->vtable->putMsg(c,msg_id,data);
 }
-inline void systemQueue_putItem(SystemQueue *q, System *s) {
+MY_INLINE void systemQueue_putItem(SystemQueue *q, System *s) {
     SystemQueueItem *i = (SystemQueueItem*)malloc(sizeof(SystemQueueItem));
     i->system = s;
     i->next = 0;
@@ -141,13 +148,7 @@ inline void systemQueue_putItem(SystemQueue *q, System *s) {
     }
 }
 
-inline void system_putMsg(System *s, int msg_id, void *data ) {
-    if(messageQueue_putItem(&s->queue, msg_id, data)) {
-        systemQueue_putItem(&s->executor->queue, s);
-    }
-}
-
-inline char messageQueue_putItem( MessageQueue *q, int msg_id, void *data ) {
+MY_INLINE char messageQueue_putItem( MessageQueue *q, int msg_id, void *data ) {
     MessageQueueItem *i = (MessageQueueItem*)malloc(sizeof(MessageQueueItem));
     i->msg_id = msg_id;
     i->data = data;
@@ -183,11 +184,12 @@ strcata(char *a, const char *b)
 #endif
 
 void __protector__(SystemVtable *vtable);
-inline void __protector__(SystemVtable *vtable) {
+MY_INLINE void __protector__(SystemVtable *vtable) {
     vtable->processMsg(0,0,0);
     system_init(0,0,0);
     executor_new();
     executor = 0;
+    system_putMsg(0,0,0);
 }
 
 #ifdef __cplusplus
