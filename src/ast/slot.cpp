@@ -65,9 +65,12 @@ void SlotDecl::codegen ( Context *_ctx ) {
             ConstantInt::get ( lctx,APInt ( ( unsigned ) 32, ( uint64_t ) 0 ) ),
             ConstantInt::get ( lctx,APInt ( ( unsigned ) 32, ( uint64_t ) i ) ),
         } );
-        Value *valPtr = Builder.CreateGEP ( ++ ( F->arg_begin() ), args );
+        Value *valPtr = Builder.CreateGEP ( ++ ( F->arg_begin() ), args, v.first + "_ptr" );
         auto type = v.second->codegen ( &ctx );
-        ctx.bindValue ( v.first,new MValue ( { type, Builder.CreateLoad ( valPtr ) } ) );
+        if( dynamic_cast<SlotType*>(slotArgsTuple->namedValues[i].second) == 0 )
+            ctx.bindValue ( v.first,new MValue ( { type, Builder.CreateLoad ( valPtr, v.first ) } ) );
+        else
+            ctx.bindValue ( v.first,new MValue ( { type, valPtr } ) );
     }
 
 

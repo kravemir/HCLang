@@ -402,9 +402,12 @@ MTupleTypeAST*    Parser::argsDecl() {
 }
 
 SendStmt*  Parser::sendStatement(Path target) {
-    if( !expectConsume(Token::EXCLAMATION_MARK) || !expect(Token::IDENTIFIER) ) return 0;
+    if( !expectConsume(Token::EXCLAMATION_MARK) ) return 0;
 
-    std::string msg = currentConsume().str_val;
+    std::string msg;
+    if( type() == Token::IDENTIFIER )
+        msg = currentConsume().str_val;
+    
     TupleAST    *call = tuple();
 
     expectConsume(Token::NEWLINE);

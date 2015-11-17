@@ -78,8 +78,17 @@ void executor_mainloop(Executor *e) {
     System *s;
     
     while( (s = systemqueue_pop( &e->queue )) != 0 ) {
-        printf("processing %p\n", s);
+        //printf("processing %p\n", s);
         while( messagequeue_executeAndPop( s, &s->queue ));
+    }
+}
+
+
+void system_putMsg(System *s, int msg_id, void *data ) {
+    //printf("putting msg %p %d\n", s, msg_id);
+    //fflush(stdout);
+    if(messageQueue_putItem(&s->queue, msg_id, data)) {
+        systemQueue_putItem(&s->executor->queue, s);
     }
 }
 

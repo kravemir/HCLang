@@ -58,7 +58,7 @@ MValue* SystemType::getChild(MValue *src, std::string name) {
             ConstantInt::get(lctx, APInt(32, (uint64_t) i)),
             Builder.CreateGEP(a, { (Value*)ConstantInt::get(lctx,APInt(32,(uint64_t)0)), (Value*)ConstantInt::get(lctx,APInt(32,(uint64_t)1))})
         );
-        return new MValue(slotTypes[i],a,true);
+        return new MValue(slotTypes[i],Builder.CreateLoad(a,"slot_val"),false);
     }
 
     return 0;

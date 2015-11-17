@@ -6,7 +6,8 @@ system Counter:
         stdout ! printfln( "Counter initialized at %d", start )
 
     slot request( callback : slot(result:int) ):
-        #callback ! (self.count)
+        stdout ! printfln( "Served %d", self.count )
+        callback ! (self.count)
         self.count = self.count + 1
 
 system Requester:
@@ -14,13 +15,14 @@ system Requester:
     var counter : Counter
 
     slot init( id : int, counter : Counter ):
+        self.id = id
         self.counter = counter
         self.counter ! request( self.response )
         
     slot response( n : int ):
         stdout ! printfln( "#%d received %d", self.id, n )
-        #if n < 30:
-        #    self.counter ! request( self.response )
+        if n < 30:
+            self.counter ! request( self.response )
 
 procedure main():
     # spawn counter
