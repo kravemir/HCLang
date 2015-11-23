@@ -100,7 +100,7 @@ int main(int argc, char **argv)
     InitializeNativeTargetAsmPrinter();
     InitializeNativeTargetAsmParser();
 
-    executor = executor_new();
+    executor = stexecutor_new();
 
     vector<Token> tokens = lexerFile(argv[1]);
 
@@ -187,7 +187,7 @@ int main(int argc, char **argv)
     void (*FP)() = (void (*)())(intptr_t)FPtr;
     FP();
 
-    executor_mainloop(executor);
+    executor->run(executor);
 
     return 0;
 }

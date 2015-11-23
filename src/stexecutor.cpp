@@ -23,47 +23,39 @@
  */
 #include "base.hpp"
 
-#include <stdio.h>
+#include <cstdio>
+#include <queue>
+
+// Single Threaded executor implementation
+
+struct STExecutor : Executor {
+    std::queue<System*> queue;
+};
+
+static
+void stexecutor_mainloop(STExecutor *e) {
+    System *s;
+
+    while(!e->queue.empty()) {
+        s = e->queue.front();
+        e->queue.pop();
+
+        system_executeWork(s);
+    }
+}
+
+static
+void stexecutor_putWork(STExecutor *e, System *s) {
+    e->queue.push(s);
+}
 
 extern "C" {
-
-inline
-bool messagequeue_executeAndPop(System *s, MessageQueue *q) {
-    fflush(stdout);
-    if( q->first == 0 ) 
-        return 0;
-
-    MessageQueueItem *i = q->first;
-    SystemVtable *vtable = (SystemVtable*)s->connection.vtable;
-    vtable->processMsg(s, i->msg_id, i->data);
-    if(i->next) {
-        q->first = i->next;
-        return true;
-    } else {
-        q->first = q->last = 0;
-        return false;
-    }
+Executor* stexecutor_new() {
+    STExecutor *e = (STExecutor*)malloc(sizeof(STExecutor));
+    new (e) STExecutor();
+    e->run = (void(*)(Executor*))stexecutor_mainloop;
+    e->putWork = (void(*)(Executor*,System*))stexecutor_putWork;
+    return e;
 }
-
-
-void system_init(
-        System *s, 
-        Executor *e,
-        SystemVtable *vtable ){
-    s->executor = e;
-    s->queue.first = s->queue.last = 0;
-    s->connection.vtable = (ConnectionVtable*)vtable;
-}
-
-void system_executeWork(System *s) {
-    while( messagequeue_executeAndPop( s, &s->queue ));
-}
-
-void system_putMsg(System *s, int msg_id, void *data ) {
-    if(messageQueue_putItem(&s->queue, msg_id, data)) {
-        s->executor->putWork(s->executor, s);
-    }
-}
-
 }
 
