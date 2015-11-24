@@ -29,6 +29,7 @@ set ( HCLANG_SRCS
     printer.cpp
 
     stexecutor.cpp
+    mtexecutor.cpp
 
     ast/array.cpp
     ast/tuple.cpp
