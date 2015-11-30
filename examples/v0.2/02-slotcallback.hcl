@@ -32,5 +32,13 @@ procedure main():
     # spawn requesters
     let requester1 = spawn Requester
     let requester2 = spawn Requester
+    let requester3 = spawn Requester
+    let requester4 = spawn Requester
+    let requester5 = spawn Requester
+    let requester6 = spawn Requester
     requester1 ! init ( 1, counter )
     requester2 ! init ( 2, counter )
+    requester3 ! init ( 3, counter )
+    requester4 ! init ( 4, counter )
+    requester5 ! init ( 5, counter )
+    requester6 ! init ( 6, counter )

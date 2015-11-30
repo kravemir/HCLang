@@ -86,32 +86,23 @@ struct System {
     MessageQueue queue;
 };
 
-// EXECUTORS AND QUEUES
-struct SystemQueueItem {
-    System *system;
-    SystemQueueItem *next;
-};
-
-struct SystemQueue {
-    SystemQueueItem *first, *last;
-};
-
-
+// EXECUTOR INTERFACE
 struct Executor {
-    SystemQueue queue;
+    void (*run)(Executor *self);
+    void (*putWork)(Executor *self, System *work);
 };
 
+// CONNECION INTERFACE
 void connection_reference(Connection *c);
 void connection_dereference(Connection *c);
 void connection_putMsg(Connection *c, int msg_id, void *data);
 
 void system_putMsg(System *s, int msg_id, void *data );
-void systemQueue_putItem(SystemQueue *q, System *s);
 
 char messageQueue_putItem( MessageQueue *q, int msg_id, void *data );
 
-Executor* executor_new();
-void executor_mainloop(Executor *e);
+Executor* stexecutor_new();
+Executor* mtexecutor_new();
 
 extern Executor *executor;
 
@@ -120,6 +111,7 @@ void system_init(
         Executor *e,
         SystemVtable *vtable
     );
+void system_executeWork(System *s);
 
 #ifndef malloc
 void* malloc(unsigned long s);
@@ -135,17 +127,6 @@ MY_INLINE void connection_dereference(Connection *c) {
 }
 MY_INLINE void connection_putMsg(Connection *c, int msg_id, void *data) {
     c->vtable->putMsg(c,msg_id,data);
-}
-MY_INLINE void systemQueue_putItem(SystemQueue *q, System *s) {
-    SystemQueueItem *i = (SystemQueueItem*)malloc(sizeof(SystemQueueItem));
-    i->system = s;
-    i->next = 0;
-    if(q->first == 0) {
-        q->first = q->last = i;
-    } else  {
-        q->last->next = i;
-        q->last = i;
-    }
 }
 
 MY_INLINE char messageQueue_putItem( MessageQueue *q, int msg_id, void *data ) {
@@ -187,7 +168,6 @@ void __protector__(SystemVtable *vtable);
 MY_INLINE void __protector__(SystemVtable *vtable) {
     vtable->processMsg(0,0,0);
     system_init(0,0,0);
-    executor_new();
     executor = 0;
     system_putMsg(0,0,0);
 }
