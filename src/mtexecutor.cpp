@@ -32,7 +32,6 @@
 
 // Multi Threaded executor implementation
 
-// src: http://stackoverflow.com/a/12805690/409102
 template <typename T>
 class blockqueue
 {
@@ -40,6 +39,7 @@ private:
     std::mutex              d_mutex;
     std::condition_variable d_condition;
     std::deque<T>           d_queue;
+    int                     d_workersOnline = 0;
 public:
     void push(T const& value) {
         {
@@ -48,12 +48,38 @@ public:
         }
         this->d_condition.notify_one();
     }
+    T donePop() {
+        std::unique_lock<std::mutex> lock(this->d_mutex);
+        d_workersOnline -= 1;
+        if(d_workersOnline == 0 && d_queue.empty()) {
+            this->d_condition.notify_all();
+            return 0;
+        }
+        this->d_condition.wait(lock, [=]{
+            return !this->d_queue.empty() || d_workersOnline == 0;
+        });
+        if( !d_queue.empty() ) {
+            T rc(std::move(this->d_queue.back()));
+            this->d_queue.pop_back();
+            d_workersOnline += 1;
+            return rc;
+        } else {
+            return 0;
+        }
+    }
     T pop() {
         std::unique_lock<std::mutex> lock(this->d_mutex);
-        this->d_condition.wait(lock, [=]{ return !this->d_queue.empty(); });
-        T rc(std::move(this->d_queue.back()));
-        this->d_queue.pop_back();
-        return rc;
+        this->d_condition.wait(lock, [=]{
+            return !this->d_queue.empty() || d_workersOnline == 0;
+        });
+        if( !d_queue.empty() ) {
+            T rc(std::move(this->d_queue.back()));
+            this->d_queue.pop_back();
+            d_workersOnline += 1;
+            return rc;
+        } else {
+            return 0;
+        }
     }
 };
 
@@ -63,14 +89,15 @@ struct MTExecutor : Executor {
 
 static
 void mtexecutor_threadloop(MTExecutor *e) {
-    System *s;
+    System *s = e->queue.pop();
 
-    while(true) {
-        s = e->queue.pop();
+    while(s) {
         // current work is too short to utilize multiple threads,
         // debug it with usleep to see it working multithreaded
         usleep(1000);
         system_executeWork(s);
+
+        s = e->queue.donePop();
     }
 }
 
