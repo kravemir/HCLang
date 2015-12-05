@@ -67,7 +67,7 @@ struct MValueType {
     virtual MValue* createConstructor(Context *ctx) { return 0; }
 
     virtual MValue* createCast(Context *ctx, MValue *src) { return 0; }
-    virtual MValueType *callReturnType() { 
+    virtual MValueType *callReturnType() {
         assert(callable);
         return _callReturnType;
     };
@@ -214,12 +214,12 @@ public:
         name(name)
     {}
 
-    virtual MValueType* codegen(Context *ctx) { 
+    virtual MValueType* codegen(Context *ctx) {
         if( name == "int" )
             return new IntType(llvm::Type::getInt64Ty(ctx->storage->module->getContext()));
         else if( name == "String" )
             return new StringType(llvm::Type::getInt8PtrTy(ctx->storage->module->getContext()));
-        return ctx->storage->types[name]; 
+        return ctx->storage->types[name];
     };
 
 private:
@@ -340,6 +340,7 @@ public:
     friend Printer& operator << ( Printer &p, const Statement &stmt );
 
     virtual void collectSystemDecl(Context *ctx) const {};
+    virtual void collectAlloc ( Context* ctx ) = 0;
 };
 
 class TypeDecl : public Statement {
@@ -350,6 +351,8 @@ public:
     {}
 
     virtual void codegen(Context *ctx);
+    virtual void collectAlloc ( Context* ctx ) {};
+
     virtual void print(Printer &p) const;
 private:
     std::string name;
@@ -366,6 +369,7 @@ public:
     {}
 
     virtual void codegen(Context *ctx);
+    virtual void collectAlloc ( Context* ctx ) {}
 
     virtual void print(Printer &p) const;
 private:
@@ -378,8 +382,14 @@ private:
 class VarDecl : public Statement {
 public:
     VarDecl(std::string name, MTypeAST *type);
+
     virtual void codegen(Context *ctx);
     virtual void collectSystemDecl(Context *ctx) const;
+    virtual void collectAlloc ( Context* ctx ) {
+        /* TODO collect alloc of value and allocate storage for value */
+    }
+
+
     virtual void print(Printer &p) const;
 
 private:
@@ -394,6 +404,7 @@ public:
     virtual void codegen(Context *ctx);
 };
 
+// TODO bind to expr result, not path
 class BindStmt : public Statement {
 public:
     BindStmt(Path target, MValueAST *value):
@@ -402,6 +413,10 @@ public:
     {}
 
     virtual void codegen(Context *ctx);
+    virtual void collectAlloc ( Context* ctx ) {
+        // TODO alloc
+    }
+
     virtual void print(Printer &p) const;
 
 private:
@@ -419,6 +434,10 @@ public:
     {}
 
     virtual void codegen(Context *ctx);
+    virtual void collectAlloc ( Context* ctx ) {
+        /* TODO alloc */
+    }
+
     virtual void print(Printer &p) const;
 
 private:
@@ -434,11 +453,15 @@ private:
 
 typedef std::vector<std::pair<MValueAST*,StatementList*>> CondStmtList;
 
-class CondStmt : public Statement { 
+class CondStmt : public Statement {
 public:
     CondStmt(CondStmtList stmts, StatementList *elStmt);
 
     virtual void codegen(Context *ctx);
+    virtual void collectAlloc ( Context* ctx ) {
+        // TODO collect
+    }
+
     virtual void print(Printer &p) const;
 private:
     CondStmtList stmts;
@@ -450,6 +473,10 @@ public:
     ReturnStmt(MValueAST *val);
 
     virtual void codegen(Context *ctx);
+    virtual void collectAlloc ( Context* ctx ) {
+        /* TODO collect alloc of value */
+    }
+
     virtual void print(Printer &p) const;
 private:
     MValueAST *val;
@@ -464,11 +491,15 @@ public:
     {}
 
     virtual void codegen(Context *ctx);
+    virtual void collectAlloc ( Context* ctx );
+
     virtual void print(Printer &p) const;
 private:
     std::string target_name;
     MValueAST *inval;
     StatementList *stmts;
+
+    llvm::AllocaInst* iPtr = 0;
 };
 
 

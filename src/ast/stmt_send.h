@@ -30,6 +30,7 @@ public:
     SendStmt(Path target, std::string msg, TupleAST *args);
 
     virtual void codegen(Context *ctx);
+    virtual void collectAlloc ( Context* ctx );
 
     virtual void print(Printer &p) const;
 private:

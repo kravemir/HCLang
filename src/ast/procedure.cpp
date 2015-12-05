@@ -29,7 +29,7 @@ using namespace llvm;
 void ProcedureDecl::codegen(Context *_ctx) {
     Context ctx (_ctx);
     MValueType *returnType = this->returnType->codegen(_ctx);
-    
+
     std::vector<std::pair<std::string,MValueType*> > args_types;
     std::vector<llvm::Type*> args_llvmtypes;
     for( auto &v : this->args->namedValues ) {
@@ -54,7 +54,9 @@ void ProcedureDecl::codegen(Context *_ctx) {
             it->setName(v.first);
             ctx.bindValue(v.first,new MValue({ args_types[i].second, it}));
         }
-        
+
+        for(Statement *stmt : *stmts)
+            stmt->collectAlloc(&ctx);
         for(Statement *stmt : *stmts)
             stmt->codegen(&ctx);
 
@@ -65,36 +67,36 @@ void ProcedureDecl::codegen(Context *_ctx) {
         TupleType *args_tuple_type = TupleType::create(args_types, name + ".args_tuple" );
         ((PointerType*)args_tuple_type->llvmType())->getTypeAtIndex((unsigned)0)->dump();
         args_tuple_type->llvmType()->dump();
-        
-        
+
+
         std::vector<Type*> types({ ctx.storage->module->getTypeByName("struct.System") });
         /*for( auto v : t->variables ) {
             types.push_back(v.second->llvmType());
         }*/
         StructType *systemType = StructType::create(lctx,types,name + ".instance");
         Type* systemPtrType = PointerType::get(systemType,0);
-        
+
         // TODO native type
         ProcedureAsyncInstanceType *instType = new ProcedureAsyncInstanceType(systemPtrType);
-        
-        
+
+
         FunctionType *msg_ft = FunctionType::get(
-            Type::getVoidTy(ctx.storage->module->getContext()), 
+            Type::getVoidTy(ctx.storage->module->getContext()),
             {
                 Type::getInt8PtrTy(getGlobalContext()),
-                Type::getInt32Ty(getGlobalContext()),  
+                Type::getInt32Ty(getGlobalContext()),
                 args_tuple_type->llvmType()
-            }, 
+            },
             false
         );
         Function *process_fn = Function::Create(msg_ft, Function::InternalLinkage, ctx.storage->prefix + name + ".fn", ctx.storage->module);
-        
+
         FunctionType *create_ft = llvm::FunctionType::get(instType->llvmType(), { Type::getInt8PtrTy(lctx) }, false);
         Function *create_fn = Function::Create(create_ft, Function::ExternalLinkage, ctx.storage->prefix + name  + ".constructor", ctx.storage->module);
-        
+
         ProcedureAsyncType *ptype = new ProcedureAsyncType(create_ft,instType);
         _ctx->bindValue(name, new MValue(ptype,create_fn));
-        
+
         {
             auto *ft = new ProcedureType(msg_ft,returnType);
 
@@ -113,7 +115,7 @@ void ProcedureDecl::codegen(Context *_ctx) {
                 );
                 ctx.bindValue(v.first,new MValue({ args_types[i].second, Builder.CreateLoad(valPtr, v.first)}));
             }
-            
+
             for(Statement *stmt : *stmts)
                 stmt->codegen(&ctx);
 
@@ -121,7 +123,7 @@ void ProcedureDecl::codegen(Context *_ctx) {
 
             process_fn->dump();
         }
-        
+
         GlobalVariable *vtable;
 
         {
@@ -140,18 +142,18 @@ void ProcedureDecl::codegen(Context *_ctx) {
             );
             if(ctx.storage->module->getTypeByName("struct.ConnectionVtable") == 0) return;
             vtable = new GlobalVariable(
-                *ctx.storage->module, 
+                *ctx.storage->module,
                 ctx.storage->module->getTypeByName("struct.SystemVtable"),
-                true, 
-                llvm::GlobalValue::PrivateLinkage, 
-                format_const, 
+                true,
+                llvm::GlobalValue::PrivateLinkage,
+                format_const,
                 ctx.storage->prefix + name  + ".vtable"
             );
             vtable->dump();
         }
-        
+
         {
-            
+
             // Create a new basic block to start insertion into.
             BasicBlock *BB = BasicBlock::Create(getGlobalContext(), "entry", create_fn);
             Builder.SetInsertPoint(BB);
@@ -176,7 +178,7 @@ void ProcedureDecl::codegen(Context *_ctx) {
             });
             Builder.CreateCall(finit,init_args);
             Builder.CreateRet(system_instance);
-            
+
             create_fn->dump();
         }
     }

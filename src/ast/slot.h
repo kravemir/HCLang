@@ -64,6 +64,8 @@ public:
 
     virtual void print ( Printer &p ) const;
     virtual void collectSystemDecl ( Context *ctx ) const;
+    virtual void collectAlloc ( Context* ctx ) {};
+
 private:
     std::string name;
     MTupleTypeAST *args;

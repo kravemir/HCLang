@@ -52,6 +52,8 @@ struct SystemDecl : Statement {
     {}
 
     virtual void codegen(Context *ctx);
+    virtual void collectAlloc ( Context* ctx ) {};
+
     virtual void print(Printer &p) const;
 
 private:

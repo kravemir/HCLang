@@ -32,6 +32,10 @@ public:
     {}
 
     virtual void codegen(Context *ctx);
+    virtual void collectAlloc ( Context* ctx ) {
+        // TODO collect expr
+    }
+
     virtual void print(Printer &p) const;
 
 private:
