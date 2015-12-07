@@ -135,6 +135,7 @@ void BindStmt::codegen(Context *ctx) {
 
 
 void VarDecl::codegen(Context *ctx) {
+    // TODO: codegen value and add variable to scope
 }
 void VarDecl::collectSystemDecl(Context *ctx) const {
     SystemType *s = ctx->storage->system;
