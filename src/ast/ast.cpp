@@ -128,14 +128,21 @@ void BindStmt::codegen(Context *ctx) {
         MValue *var = target->getChild(this->target[1]);
         var->store(val);
     } else {
-        MValue *val = value->codegen(ctx);
-        ctx->bindValue(target[0],val); // TODO
+        MValue *newValue = value->codegen(ctx);
+        MValue *varValue = ctx->getValue(target[0]);
+        varValue->store(newValue);
     }
 }
 
 
 void VarDecl::codegen(Context *ctx) {
-    // TODO: codegen value and add variable to scope
+    MValueType *t = 0;
+    if( type )
+        t = type->codegen(ctx);
+    MValue *v = val->codegen(ctx,t);
+    AllocaInst *alloc = Builder.CreateAlloca(v->type->llvmType(), nullptr, "var." + name + ".alloca");
+    Builder.CreateStore(v->value(), alloc);
+    ctx->bindValue(name, new MValue(v->type,alloc,true));
 }
 void VarDecl::collectSystemDecl(Context *ctx) const {
     SystemType *s = ctx->storage->system;
@@ -150,10 +157,10 @@ Value* MValue::value() {
 }
 
 void MValue::store(MValue *v) {
-    // TODO else
-    if(variable) {
-        Builder.CreateStore(v->value(),_value);
-    }
+    // TODO nice error
+    assert(variable && "Must be variable");
+
+    Builder.CreateStore(v->value(),_value);
 }
 void CondStmt::codegen(Context *ctx) {
     Function *TheFunction = Builder.GetInsertBlock()->getParent();
