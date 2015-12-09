@@ -193,9 +193,10 @@ std::string BinaryOpAST::toString() const {
     return left->toString() + ops[op] + right->toString();
 }
 
-VarDecl::VarDecl(std::string name, MTypeAST *type):
+VarDecl::VarDecl(std::string name, MTypeAST *type, MValueAST *val):
     name(name),
-    type(type)
+    type(type),
+    val(val)
 {}
 
 

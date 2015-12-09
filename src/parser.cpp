@@ -249,19 +249,17 @@ VarDecl*   Parser::varStatement() {
     if( !expectConsume(Token::VAR)
         || !expect(Token::IDENTIFIER) ) return 0;
     std::string name = currentConsume().str_val;
-    MTypeAST *type;
+    MTypeAST *type = 0;
+    MValueAST *val = 0;
 
     if( tryConsume( Token::COLON ))
         type = typeDecl();
-
-
-    if( tryConsume(Token::ASSIGN)) {
-        MValueAST *val = value();
-    }
+    if( tryConsume(Token::ASSIGN))
+        val = value();
 
     expectConsume(Token::NEWLINE);
 
-    return new VarDecl(name,type);
+    return new VarDecl(name,type,val);
 }
 
 Path Parser::path() {
