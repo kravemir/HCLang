@@ -61,6 +61,7 @@ struct ArrayAST : MValueAST {
     ArrayAST( MValueList *values ): values(values)
     {}
 
+    virtual MValueType* calculateType(Context *ctx);
     virtual MValue* codegen(Context *ctx, MValueType *type = 0);
     std::string toString() const;
 

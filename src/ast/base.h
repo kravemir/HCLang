@@ -230,6 +230,7 @@ class MValueAST {
 public:
     virtual ~MValueAST() {};
 
+    virtual MValueType *calculateType(Context *ctx) = 0;
     virtual MValue* codegen(Context *ctx, MValueType *type = 0) = 0;
 
     virtual std::string toString() const = 0;
@@ -239,6 +240,9 @@ class VarExpr : public MValueAST {
 public:
     VarExpr(std::string str);
 
+    virtual MValueType* calculateType(Context *ctx) {
+        // TODO: calculateType
+    };
     virtual MValue* codegen(Context *ctx, MValueType *type = 0);
     virtual std::string toString() const;
 
@@ -253,6 +257,9 @@ public:
         name(name)
     {}
 
+    virtual MValueType* calculateType(Context *ctx) {
+        // TODO: calculateType
+    };
     virtual MValue* codegen(Context *ctx, MValueType *type = 0);
     virtual std::string toString() const { return val->toString() + "." + name; }
 
@@ -265,6 +272,9 @@ class SpawnExpr : public MValueAST {
 public:
     SpawnExpr(std::string str, TupleAST *spawnArgs);
 
+    virtual MValueType* calculateType(Context *ctx) {
+        // TODO: calculateType
+    };
     virtual MValue* codegen(Context *ctx, MValueType *type = 0);
     virtual std::string toString() const;
 
@@ -277,6 +287,9 @@ class IntegerAST : public MValueAST {
 public:
     IntegerAST(uint64_t val);
 
+    virtual MValueType* calculateType(Context *ctx) {
+        // TODO: calculateType
+    };
     virtual MValue* codegen(Context *ctx, MValueType *type = 0);
     virtual std::string toString() const;
 
@@ -287,6 +300,9 @@ class StringAST : public MValueAST {
 public:
     StringAST(std::string val);
 
+    virtual MValueType* calculateType(Context *ctx) {
+        // TODO: calculateType
+    };
     virtual MValue* codegen(Context *ctx, MValueType *type = 0);
     virtual std::string toString() const;
 
@@ -302,6 +318,9 @@ public:
         elseVal(elseVal)
     {}
 
+    virtual MValueType* calculateType(Context *ctx) {
+        // TODO: calculateType
+    };
     virtual MValue* codegen(Context *ctx, MValueType *type = 0);
     virtual std::string toString() const;
 
@@ -320,6 +339,9 @@ public:
         args(args)
     {}
 
+    virtual MValueType* calculateType(Context *ctx) {
+        // TODO: calculateType
+    };
     virtual MValue* codegen(Context *ctx, MValueType *type = 0);
     std::string toString() const;
 

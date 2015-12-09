@@ -29,6 +29,7 @@ class BinaryOpAST : public MValueAST {
 public:
     BinaryOpAST(Token::Type op, MValueAST *left, MValueAST *right);
 
+    virtual MValueType* calculateType(Context *ctx);
     virtual MValue* codegen(Context *ctx, MValueType *type = 0);
     virtual std::string toString() const;
 
