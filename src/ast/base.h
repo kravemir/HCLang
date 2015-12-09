@@ -377,7 +377,7 @@ private:
 
 class VarDecl : public Statement {
 public:
-    VarDecl(std::string name, MTypeAST *type);
+    VarDecl(std::string name, MTypeAST *type, MValueAST *val);
     virtual void codegen(Context *ctx);
     virtual void collectSystemDecl(Context *ctx) const;
     virtual void print(Printer &p) const;
@@ -385,6 +385,7 @@ public:
 private:
     std::string name;
     MTypeAST *type;
+    MValueAST *val;
 };
 
 class ImportStmt : public Statement {
@@ -405,6 +406,7 @@ public:
     virtual void print(Printer &p) const;
 
 private:
+    // TODO: not path, but expression
     Path target;
     MValueAST *value;
 };
