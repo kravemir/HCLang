@@ -88,11 +88,11 @@ struct VoidType : MValueType {
 };
 
 struct MFunctionType : MValueType {
-    MFunctionType() : MValueType(0,true) {}
+    MFunctionType(MValueType *retType) : MValueType(0,true,retType) {}
 
     MValueType *retType;
     virtual llvm::Type* llvmType() const {
-        return 0; // TODO
+        return retType->llvmType();
     }
 };
 
@@ -171,7 +171,7 @@ struct Context {
         storage(parent->storage)
     {}
 
-    ~Context() {
+    virtual ~Context() {
         // TODO
     };
 };

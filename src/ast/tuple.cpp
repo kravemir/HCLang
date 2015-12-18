@@ -50,7 +50,7 @@ MValue* TupleType::createConstructor(Context *ctx) {
     llvm::FunctionType *FT = llvm::FunctionType::get(ptrType, types, false);
 
     Function *F = Function::Create(FT, Function::PrivateLinkage, "tuple_constructor", ctx->storage->module);
-    auto *ft = new MFunctionType();
+    auto *ft = new MFunctionType(this);
     ft->retType = this;
 
     // Create a new basic block to start insertion into.

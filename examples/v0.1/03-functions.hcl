@@ -17,5 +17,5 @@ system LimitedAccelerator:
             self ! accelerate( times - 1 )
 
 procedure main():
-    la = spawn LimitedAccelerator
+    let la = spawn LimitedAccelerator
     la ! run()
