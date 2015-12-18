@@ -140,14 +140,19 @@ void VarDecl::codegen(Context *ctx) {
     if(dynamic_cast<SystemContext*>(ctx) != 0) {
         return;
     }
-    MValueType *t = 0;
-    if( type )
-        t = type->codegen(ctx);
-    MValue *v = val->codegen(ctx,t);
-    AllocaInst *alloc = Builder.CreateAlloca(v->type->llvmType(), nullptr, "var." + name + ".alloca");
+    MValue *v = val->codegen(ctx,typeVal);
     Builder.CreateStore(v->value(), alloc);
     ctx->bindValue(name, new MValue(v->type,alloc,true));
 }
+
+void VarDecl::collectAlloc(Context *ctx) {
+    if( type )
+        typeVal = type->codegen(ctx);
+    else
+        typeVal = val->calculateType(ctx);
+    alloc = Builder.CreateAlloca(typeVal->llvmType(), nullptr, "var." + name + ".alloca");
+}
+
 void VarDecl::collectSystemDecl(Context *ctx) const {
     SystemType *s = ctx->storage->system;
     s->variables.push_back(make_pair(name,type->codegen(ctx)));
@@ -243,6 +248,8 @@ void ForStmt::codegen(Context *ctx) {
 
 void ForStmt::collectAlloc ( Context* ctx ) {
     iPtr = Builder.CreateAlloca(Type::getInt64Ty(lctx),0,"for.i.alloca");
+    for( auto *s : *stmts )
+        s->collectAlloc(ctx);
 }
 
 void ReturnStmt::codegen(Context *ctx) {

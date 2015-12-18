@@ -10,10 +10,11 @@ procedure main():
     ]
 
     for str in strs:
+        var testAlloca = "X_" + str + "_X"
         # update content of variables
         str_concat = str_concat + str
         str_num = str_num + 1
 
         # debug print results
-        stdout ! println( str )
+        stdout ! println( testAlloca )
         stdout ! printfln( "Total %d strings printed, concat: %s", str_num, str_concat )

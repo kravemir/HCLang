@@ -26,6 +26,7 @@ using namespace llvm;
 
 MValueType* BinaryOpAST::calculateType(Context* ctx) {
     // TODO: calculateType
+    left->calculateType(ctx);
 }
 
 MValue* BinaryOpAST::codegen(Context *ctx, MValueType *type) {

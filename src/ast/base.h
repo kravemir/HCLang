@@ -66,7 +66,7 @@ struct MValueType {
 
     virtual MValue* createConstructor(Context *ctx) { return 0; }
 
-    virtual MValue* createCast(Context *ctx, MValue *src) { return 0; }
+    virtual MValue* createCast(Context *ctx, MValue *src) { assert(0 && "Can't cast"); return 0; }
     virtual MValueType *callReturnType() {
         assert(callable);
         return _callReturnType;
@@ -75,26 +75,6 @@ struct MValueType {
 
 struct TupleAST;
 struct MTupleTypeAST;
-
-
-struct IntType : MValueType {
-    IntType(llvm::Type* type) : MValueType(type) { assert(type); };
-};
-struct StringType : MValueType {
-    StringType(llvm::Type* type) : MValueType(type) { assert(type); };
-};
-struct VoidType : MValueType {
-    VoidType(llvm::Type* type) : MValueType(type) { assert(type); };
-};
-
-struct MFunctionType : MValueType {
-    MFunctionType(MValueType *retType) : MValueType(0,true,retType) {}
-
-    MValueType *retType;
-    virtual llvm::Type* llvmType() const {
-        return retType->llvmType();
-    }
-};
 
 struct MValue {
     MValueType *type;
@@ -193,6 +173,40 @@ struct SystemContext : Context {
     }
 };
 
+
+struct IntType : MValueType {
+    IntType(llvm::Type* type) : MValueType(type) { assert(type); };
+
+    static IntType* create(Context *ctx) {
+        return new IntType(llvm::Type::getInt64Ty(ctx->storage->module->getContext()));
+    }
+};
+struct StringType : MValueType {
+    StringType(llvm::Type* type) : MValueType(type) { assert(type); };
+
+    static StringType* create(Context *ctx) {
+        return new StringType(llvm::Type::getInt8PtrTy(ctx->storage->module->getContext()));
+    }
+
+    virtual MValue* createCast ( Context* ctx, MValue* src ) {
+        // don't cast, check type
+        assert( dynamic_cast<StringType*>(src->type) );
+        return src;
+    }
+};
+struct VoidType : MValueType {
+    VoidType(llvm::Type* type) : MValueType(type) { assert(type); };
+};
+
+struct MFunctionType : MValueType {
+    MFunctionType(MValueType *retType) : MValueType(0,true,retType) {}
+
+    MValueType *retType;
+    virtual llvm::Type* llvmType() const {
+        return retType->llvmType();
+    }
+};
+
 struct Path : std::vector<std::string> {
 };
 
@@ -288,7 +302,7 @@ public:
     IntegerAST(uint64_t val);
 
     virtual MValueType* calculateType(Context *ctx) {
-        // TODO: calculateType
+        return IntType::create(ctx);
     };
     virtual MValue* codegen(Context *ctx, MValueType *type = 0);
     virtual std::string toString() const;
@@ -301,7 +315,7 @@ public:
     StringAST(std::string val);
 
     virtual MValueType* calculateType(Context *ctx) {
-        // TODO: calculateType
+        return StringType::create(ctx);
     };
     virtual MValue* codegen(Context *ctx, MValueType *type = 0);
     virtual std::string toString() const;
@@ -407,10 +421,7 @@ public:
 
     virtual void codegen(Context *ctx);
     virtual void collectSystemDecl(Context *ctx) const;
-    virtual void collectAlloc ( Context* ctx ) {
-        /* TODO collect alloc of value and allocate storage for value */
-    }
-
+    virtual void collectAlloc ( Context* ctx );
 
     virtual void print(Printer &p) const;
 
@@ -418,6 +429,9 @@ private:
     std::string name;
     MTypeAST *type;
     MValueAST *val;
+
+    MValueType *typeVal;
+    llvm::AllocaInst *alloc;
 };
 
 class ImportStmt : public Statement {
