@@ -136,6 +136,10 @@ void BindStmt::codegen(Context *ctx) {
 
 
 void VarDecl::codegen(Context *ctx) {
+    // TODO: QUICKFIX - don't compile as system decl
+    if(dynamic_cast<SystemContext*>(ctx) != 0) {
+        return;
+    }
     MValueType *t = 0;
     if( type )
         t = type->codegen(ctx);
@@ -260,11 +264,13 @@ void FunctionDecl::codegen(Context *_ctx) {
         args.push_back(type->llvmType());
         types.push_back(type);
     }
-    llvm::FunctionType *FT = llvm::FunctionType::get(retType->codegen(&ctx)->llvmType(), args, false);
+
+    MValueType *rt = retType->codegen(&ctx);
+    llvm::FunctionType *FT = llvm::FunctionType::get(rt->llvmType(), args, false);
 
     Function *F = Function::Create(FT, Function::PrivateLinkage, ctx.storage->prefix + name, ctx.storage->module);
 
-    auto *ft = new MFunctionType();
+    auto *ft = new MFunctionType(rt);
     ft->retType = retType->codegen(&ctx);
     _ctx->bindValue(name, new MValue({
                 ft,
