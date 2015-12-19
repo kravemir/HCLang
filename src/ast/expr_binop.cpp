@@ -24,6 +24,11 @@
 
 using namespace llvm;
 
+MValueType* BinaryOpAST::calculateType(Context* ctx) {
+    // TODO: calculateType
+    left->calculateType(ctx);
+}
+
 MValue* BinaryOpAST::codegen(Context *ctx, MValueType *type) {
     MValue *l = left->codegen(ctx);
     MValue *r = right->codegen(ctx);
@@ -35,9 +40,9 @@ MValue* BinaryOpAST::codegen(Context *ctx, MValueType *type) {
         case Token::MINUS:
             res = Builder.CreateSub(l->value(), r->value()); break;
         case Token::LESS:
-            res = Builder.CreateICmpULE(l->value(), r->value()); break;
+            res = Builder.CreateICmpULT(l->value(), r->value()); break;
         case Token::GREATER:
-            res = Builder.CreateICmpUGE(l->value(), r->value()); break;
+            res = Builder.CreateICmpUGT(l->value(), r->value()); break;
         default:
             assert(0);
             return 0;

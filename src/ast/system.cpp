@@ -49,16 +49,19 @@ MValue* SystemType::getChild(MValue *src, std::string name) {
             break;
         }
     if(i != -1) {
-        Value *a = Builder.CreateAlloca(slotTypes[i]->llvmType(), nullptr, "slot_ptr_alloca");
-        Builder.CreateStore(
+        Value *val_with_system = Builder.CreateInsertValue(
+            UndefValue::get(slotTypes[i]->llvmType()),
             src->value(),
-            Builder.CreateGEP(a, { (Value*)ConstantInt::get(lctx,APInt(32,(uint64_t)0)), (Value*)ConstantInt::get(lctx,APInt(32,(uint64_t)0))})
+            { 0 },
+            "slotref.system"
         );
-        Builder.CreateStore(
+        Value *val_with_msgid = Builder.CreateInsertValue(
+            val_with_system,
             ConstantInt::get(lctx, APInt(32, (uint64_t) i)),
-            Builder.CreateGEP(a, { (Value*)ConstantInt::get(lctx,APInt(32,(uint64_t)0)), (Value*)ConstantInt::get(lctx,APInt(32,(uint64_t)1))})
+            { 1 },
+            "slotref.msgid"
         );
-        return new MValue(slotTypes[i],Builder.CreateLoad(a,"slot_val"),false);
+        return new MValue(slotTypes[i],val_with_msgid,false);
     }
 
     return 0;

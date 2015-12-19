@@ -73,6 +73,8 @@ void SlotDecl::codegen ( Context *_ctx ) {
             ctx.bindValue ( v.first,new MValue ( { type, valPtr } ) );
     }
 
+    for ( Statement *stmt : *stmts )
+        stmt->collectAlloc ( &ctx );
 
     for ( Statement *stmt : *stmts )
         stmt->codegen ( &ctx );

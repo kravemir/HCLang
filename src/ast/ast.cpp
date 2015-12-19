@@ -44,7 +44,7 @@ MValue* VarExpr::codegen(Context *ctx, MValueType *type) {
 MValue* CallExpr::codegen(Context *ctx, MValueType *type) {
     MValue *v = val->codegen(ctx);
     MValueType *ft = v->type;
-    if( !ft->callable ) { 
+    if( !ft->callable ) {
         std::cerr << "Can't use as function\n" << std::endl;
     }
     std::vector<Value *> argsV;
@@ -62,7 +62,7 @@ MValue* CallExpr::codegen(Context *ctx, MValueType *type) {
 MValue* SpawnExpr::codegen(Context *ctx, MValueType *type) {
     MValue* v = ctx->getValue(name);
     assert(v);
-    
+
     SystemType *system_type = dynamic_cast<SystemType*>(v->type);
     ProcedureAsyncType *procedure_type = dynamic_cast<ProcedureAsyncType*>(v->type);
     if( system_type ) {
@@ -78,7 +78,7 @@ MValue* SpawnExpr::codegen(Context *ctx, MValueType *type) {
         Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(getGlobalContext()));
         std::vector<llvm::Value*> indices(1,zero);
         std::vector<Value *> ArgsV({Builder.CreateLoad(Builder.CreateGEP(executor,indices,"global_executor"))});
-        
+
         Value *procinst = Builder.CreateCall(v->value(), ArgsV, "procedure_instance");
         Function *finit = ctx->storage->module->getFunction("system_putMsg");
         std::vector<llvm::Value*> aadices({
@@ -96,11 +96,11 @@ MValue* StringAST::codegen(Context *ctx, MValueType *type) {
     Constant *format_const = ConstantDataArray::getString(lctx, val.c_str() );
     Type* ltype = ArrayType::get(IntegerType::get(lctx, 8), val.size() + 1);
     GlobalVariable *var = new GlobalVariable(
-        *ctx->storage->module, 
+        *ctx->storage->module,
         ltype,
-        true, 
-        llvm::GlobalValue::PrivateLinkage, 
-        format_const, 
+        true,
+        llvm::GlobalValue::PrivateLinkage,
+        format_const,
         ".str"
     );
 
@@ -140,14 +140,20 @@ void VarDecl::codegen(Context *ctx) {
     if(dynamic_cast<SystemContext*>(ctx) != 0) {
         return;
     }
-    MValueType *t = 0;
-    if( type )
-        t = type->codegen(ctx);
-    MValue *v = val->codegen(ctx,t);
-    AllocaInst *alloc = Builder.CreateAlloca(v->type->llvmType(), nullptr, "var." + name + ".alloca");
+    assert(alloc);
+    MValue *v = val->codegen(ctx,typeVal);
     Builder.CreateStore(v->value(), alloc);
     ctx->bindValue(name, new MValue(v->type,alloc,true));
 }
+
+void VarDecl::collectAlloc(Context *ctx) {
+    if( type )
+        typeVal = type->codegen(ctx);
+    else
+        typeVal = val->calculateType(ctx);
+    alloc = Builder.CreateAlloca(typeVal->llvmType(), nullptr, "var." + name + ".alloca");
+}
+
 void VarDecl::collectSystemDecl(Context *ctx) const {
     SystemType *s = ctx->storage->system;
     s->variables.push_back(make_pair(name,type->codegen(ctx)));
@@ -206,6 +212,17 @@ void CondStmt::codegen(Context *ctx) {
     TheFunction->getBasicBlockList().push_back(MergeBB);
     Builder.SetInsertPoint(MergeBB);
 }
+
+void CondStmt::collectAlloc(Context *ctx) {
+    for( int i = 0; i < stmts.size(); i++ )
+        for( auto *s : *stmts[i].second )
+            s->collectAlloc(ctx);
+
+    if( elStmt )
+        for( auto *s : *elStmt )
+            s->collectAlloc(ctx);
+}
+
 void ForStmt::codegen(Context *ctx) {
     Function *TheFunction = Builder.GetInsertBlock()->getParent();
 
@@ -215,7 +232,7 @@ void ForStmt::codegen(Context *ctx) {
     BasicBlock *forBB = BasicBlock::Create(getGlobalContext(), "for");
     BasicBlock *endBB = BasicBlock::Create(getGlobalContext(), "endfor");
 
-    AllocaInst* iPtr = Builder.CreateAlloca(Type::getInt64Ty(lctx));
+    assert( iPtr && "Probably collectAlloc wasn't called" );
     Builder.CreateStore( ConstantInt::get(lctx,APInt((unsigned)64,(uint64_t)0)), iPtr);
     MValue *val = this->inval->codegen(ctx);
     Builder.CreateBr(condBB);
@@ -231,8 +248,8 @@ void ForStmt::codegen(Context *ctx) {
     ctx->bindValue(target_name, val->type->getArrayChild(val,Builder.CreateLoad(iPtr)));
     for( auto *s : *stmts )
         s->codegen(ctx);
-    Builder.CreateStore( 
-            Builder.CreateAdd(Builder.CreateLoad(iPtr),ConstantInt::get(lctx,APInt((unsigned)64,(uint64_t)1))), 
+    Builder.CreateStore(
+            Builder.CreateAdd(Builder.CreateLoad(iPtr),ConstantInt::get(lctx,APInt((unsigned)64,(uint64_t)1))),
             iPtr
         );
     Builder.CreateBr(condBB);
@@ -240,6 +257,13 @@ void ForStmt::codegen(Context *ctx) {
     Builder.SetInsertPoint(endBB);
 
 }
+
+void ForStmt::collectAlloc ( Context* ctx ) {
+    iPtr = Builder.CreateAlloca(Type::getInt64Ty(lctx),0,"for.i.alloca");
+    for( auto *s : *stmts )
+        s->collectAlloc(ctx);
+}
+
 void ReturnStmt::codegen(Context *ctx) {
     MValue *value = val->codegen(ctx);
     Builder.CreateRet(value->value());
@@ -281,7 +305,7 @@ void FunctionDecl::codegen(Context *_ctx) {
         auto v = this->args->namedValues[i];
         ctx.bindValue(v.first, new MValue({types[i],arg}));
     }
-    
+
     for(Statement *stmt : *stmts)
         stmt->codegen(&ctx);
 }
@@ -338,7 +362,7 @@ void MatchAssignStmt::codegen(Context *ctx) {
 
     for( auto c : cases ) {
         std::pair<llvm::Value*,MValue*> cv = incoming->type->matchCond(c.first,incoming,ctx);
-        
+
         BasicBlock *ThenBB = BasicBlock::Create(getGlobalContext(), "match_case", TheFunction);
         BasicBlock *ElseBB = BasicBlock::Create(getGlobalContext(), "match_nextcase");
 

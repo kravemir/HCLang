@@ -65,6 +65,10 @@ MValueType* MArrayTypeAST::codegen(Context *ctx) {
 
 #include <cstdlib>
 
+MValueType* ArrayAST::calculateType(Context* ctx) {
+    // TODO: calculateType
+}
+
 MValue* ArrayAST::codegen(Context *ctx, MValueType *type) {
     MValueType *childType = 0;
     if(type != 0) {

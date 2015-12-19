@@ -50,17 +50,17 @@ void SendStmt::codegen(Context *ctx) {
 
         Constant *format_const = ConstantDataArray::getString(lctx, "\n" );
         GlobalVariable *var = new GlobalVariable(
-                *ctx->storage->module, 
+                *ctx->storage->module,
                 llvm::ArrayType::get(llvm::IntegerType::get(lctx, 8), 2),
-                true, 
-                llvm::GlobalValue::PrivateLinkage, 
-                format_const, 
+                true,
+                llvm::GlobalValue::PrivateLinkage,
+                format_const,
                 ".str"
             );
         std::vector<llvm::Constant*> indices(2,zero);
         Builder.CreateCall(printf_func, ConstantExpr::getGetElementPtr(
                     ArrayType::get(llvm::IntegerType::get(lctx, 8), 2),
-                    var, 
+                    var,
                     indices));
     } else {
         MValue *ma = ctx->getVariable(target[0]); // TODO
@@ -98,3 +98,8 @@ void SendStmt::codegen(Context *ctx) {
         }
     }
 }
+
+void SendStmt::collectAlloc(Context* ctx) {
+
+}
+

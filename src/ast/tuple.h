@@ -59,6 +59,7 @@ struct MTupleTypeAST : MTypeAST {
 struct TupleAST : MValueAST {
     TupleAST( MValueList *values, MValueMap *namedMValues );
 
+    virtual MValueType* calculateType(Context *ctx);
     virtual MValue* codegen(Context *ctx, MValueType *type = 0);
     std::string toString() const;
 

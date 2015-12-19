@@ -112,6 +112,10 @@ TupleType* MTupleTypeAST::codegen(Context *ctx) {
     return TupleType::create(namedValues);
 };
 
+MValueType* TupleAST::calculateType(Context *ctx) {
+    // TODO: calculateType
+}
+
 MValue* TupleAST::codegen(Context *ctx, MValueType *type) {
     LLVMContext &lctx = getGlobalContext();
     Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(lctx));
