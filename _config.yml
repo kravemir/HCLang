@@ -1,0 +1,11 @@
+# HCLang site settings
+
+# Site settings
+title: HCLang
+description: >
+  HCLang is a new programming language focused on massive concurrency
+baseurl: ""
+url: "http://hclang.kravemir.org"
+
+# Build settings
+markdown: kramdown
