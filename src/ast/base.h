@@ -431,7 +431,7 @@ private:
     MValueAST *val;
 
     MValueType *typeVal;
-    llvm::AllocaInst *alloc;
+    llvm::AllocaInst *alloc = 0;
 };
 
 class ImportStmt : public Statement {
@@ -496,10 +496,7 @@ public:
     CondStmt(CondStmtList stmts, StatementList *elStmt);
 
     virtual void codegen(Context *ctx);
-    virtual void collectAlloc ( Context* ctx ) {
-        // TODO collect
-    }
-
+    virtual void collectAlloc ( Context* ctx );
     virtual void print(Printer &p) const;
 private:
     CondStmtList stmts;

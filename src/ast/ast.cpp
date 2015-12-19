@@ -140,6 +140,7 @@ void VarDecl::codegen(Context *ctx) {
     if(dynamic_cast<SystemContext*>(ctx) != 0) {
         return;
     }
+    assert(alloc);
     MValue *v = val->codegen(ctx,typeVal);
     Builder.CreateStore(v->value(), alloc);
     ctx->bindValue(name, new MValue(v->type,alloc,true));
@@ -211,6 +212,17 @@ void CondStmt::codegen(Context *ctx) {
     TheFunction->getBasicBlockList().push_back(MergeBB);
     Builder.SetInsertPoint(MergeBB);
 }
+
+void CondStmt::collectAlloc(Context *ctx) {
+    for( int i = 0; i < stmts.size(); i++ )
+        for( auto *s : *stmts[i].second )
+            s->collectAlloc(ctx);
+
+    if( elStmt )
+        for( auto *s : *elStmt )
+            s->collectAlloc(ctx);
+}
+
 void ForStmt::codegen(Context *ctx) {
     Function *TheFunction = Builder.GetInsertBlock()->getParent();
 
