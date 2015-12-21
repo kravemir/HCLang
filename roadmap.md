@@ -20,6 +20,8 @@ Features:
  * parallel execution of procedures
  * communication between systems
 
+[Details](roadmap/detail-v0.2)
+
 ### v0.3 - Types and Basic Memory Management
 Features:
 
