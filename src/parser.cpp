@@ -148,11 +148,14 @@ Statement* Parser::pathPrefixStatement(){
         return bindStatement(p);
     case Token::EXCLAMATION_MARK:
         return sendStatement(p);
-    case Token::OPEN_PARENTHESIS:
+    case Token::OPEN_PARENTHESIS: // TODO: use atom function
         {
             TupleAST *call = tuple();
             expectConsume(Token::NEWLINE);
-            return new ExprStmt(new CallExpr(new VarExpr(p[0]),call));
+            MValueAST *val = new VarExpr(p[0]);
+            for(int i = 1; i < p.size(); i++)
+                val = new GetChildAST(val,p[i]);
+            return new ExprStmt(new CallExpr(val,call));
         }
     default:
         errorExpansion("Unexpected token at expasion of path prefix statement");
