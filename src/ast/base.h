@@ -59,6 +59,8 @@ struct MValueType {
 
     virtual ~MValueType() {};
 
+    virtual MValueType* getChildType(std::string name) { assert( 0 && "Type doesn't have children"); return 0; };
+
     virtual MValue* getChild(MValue *src, std::string name) { return 0; }
     virtual MValue* getArrayChild(MValue *src, llvm::Value *index) { return 0; }
 
@@ -106,6 +108,11 @@ struct ContextStorage {
     SystemType *system;
     llvm::Module *module;
     std::string prefix;
+};
+
+class Block {
+public:
+    virtual void createBr();
 };
 
 struct Context {
@@ -244,6 +251,7 @@ class MValueAST {
 public:
     virtual ~MValueAST() {};
 
+    virtual void preCodegen(Context *ctx) {};
     virtual MValueType *calculateType(Context *ctx) = 0;
     virtual MValue* codegen(Context *ctx, MValueType *type = 0) = 0;
 
@@ -254,9 +262,7 @@ class VarExpr : public MValueAST {
 public:
     VarExpr(std::string str);
 
-    virtual MValueType* calculateType(Context *ctx) {
-        // TODO: calculateType
-    };
+    virtual MValueType* calculateType(Context *ctx);
     virtual MValue* codegen(Context *ctx, MValueType *type = 0);
     virtual std::string toString() const;
 
@@ -271,9 +277,7 @@ public:
         name(name)
     {}
 
-    virtual MValueType* calculateType(Context *ctx) {
-        // TODO: calculateType
-    };
+    virtual MValueType* calculateType(Context *ctx);
     virtual MValue* codegen(Context *ctx, MValueType *type = 0);
     virtual std::string toString() const { return val->toString() + "." + name; }
 
@@ -353,6 +357,7 @@ public:
         args(args)
     {}
 
+    virtual void preCodegen(Context *ctx);
     virtual MValueType* calculateType(Context *ctx) {
         // TODO: calculateType
     };
@@ -360,6 +365,7 @@ public:
     std::string toString() const;
 
 private:
+    int precodegenVarId = -1;
     MValueAST *val;
     TupleAST *args;
 };

@@ -30,34 +30,76 @@ using namespace llvm;
 IRBuilder<> Builder(getGlobalContext());
 LLVMContext &lctx = getGlobalContext();
 
+MValueType* GetChildAST::calculateType(Context *ctx) {
+    MValueType *t = val->calculateType(ctx);
+    assert(t);
+    return t->getChildType(name);
+};
 MValue* GetChildAST::codegen(Context *ctx, MValueType *type) {
     MValue *target = val->codegen(ctx);
     MValue *child = target->getChild(name);
     assert(child);
     return child;
 }
+MValueType* VarExpr::calculateType(Context *ctx) {
+    MValue *val = ctx->getValue(str);
+    assert(val);
+    return val->type;
+};
 MValue* VarExpr::codegen(Context *ctx, MValueType *type) {
     MValue *v = ctx->getValue(str); // TODO
     assert(v);
     return v;
 }
+void CallExpr::preCodegen(Context *ctx) {
+    val->preCodegen(ctx);
+    MValueType *ft = val->calculateType(ctx);
+    assert(ft);
+
+    SlotType *st = dynamic_cast<SlotType *>(ft);
+    if (st) {
+        MValue *ma = val->codegen(ctx);
+        Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(lctx));
+        args->preCodegen(ctx);
+        MValue *v_args = args->codegen(ctx);
+        Function *finit = ctx->storage->module->getFunction("system_putMsg");
+        ma->value()->dump();
+        std::vector<llvm::Value*> aadices(
+                {
+                        Builder.CreateExtractValue(ma->value(), {0}, "await_send_system"),
+                        Builder.CreateExtractValue(ma->value(), {1}, "await_send_slot"),
+                        v_args ? v_args->value() : zero
+                });
+        Builder.CreateCall(finit,aadices)->dump();
+        precodegenVarId = 0;
+    } else {
+
+    }
+}
 MValue* CallExpr::codegen(Context *ctx, MValueType *type) {
     MValue *v = val->codegen(ctx);
     MValueType *ft = v->type;
-    if( !ft->callable ) {
-        std::cerr << "Can't use as function\n" << std::endl;
-    }
     std::vector<Value *> argsV;
-    for(int i = 0; i < args->size(); i++) {
+    for (int i = 0; i < args->size(); i++) {
         auto a = args->get(i);
         argsV.push_back(a->codegen(ctx)->value());
     }
 
-    MValue * val = new MValue({ft->callReturnType(),Builder.CreateCall(v->value(), argsV, "calltmp")});
-    if( type )
-        return type->createCast(ctx,val);
-    return val;
-
+    SlotType *st = dynamic_cast<SlotType *>(ft);
+    if (st) {
+        assert( precodegenVarId != -1 );
+        Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(lctx));
+        return new MValue(IntType::create(ctx),zero); // TODO value
+    } else {
+        if (!ft->callable) {
+            std::cerr << "Can't use as function\n" << std::endl;
+            assert( 0 );
+        }
+        MValue *val = new MValue({ft->callReturnType(), Builder.CreateCall(v->value(), argsV, "calltmp")});
+        if (type)
+            return type->createCast(ctx, val);
+        return val;
+    }
 }
 MValue* SpawnExpr::codegen(Context *ctx, MValueType *type) {
     MValue* v = ctx->getValue(name);

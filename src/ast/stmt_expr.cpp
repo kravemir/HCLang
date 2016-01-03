@@ -27,6 +27,7 @@
 #include "printer.h"
 
 void ExprStmt::codegen(Context *ctx) {
+    value->preCodegen(ctx);
     value->codegen(ctx);
 }
 

@@ -6,9 +6,10 @@ system Counter:
 
     slot next() int:
         self.count = self.count + 1
+        stdout ! printfln("Counter received: %d", self.count)
         return self.count
 
-procedure main() async:
+procedure main2() async:
     # spawn counter
     let counter = spawn Counter
 
@@ -17,3 +18,6 @@ procedure main() async:
     stdout ! printfln( "%d", counter.next() )
     stdout ! printfln( "%d", counter.next() )
     stdout ! printfln( "%d", counter.next() )
+
+procedure main():
+    let m = spawn main2()

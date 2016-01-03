@@ -42,6 +42,9 @@ struct SystemType : MValueType {
     }
     virtual MValue* getChild(MValue *src, std::string name);
 
+
+    virtual MValueType *getChildType(std::string name) override;
+
     llvm::Type* _llvmType;
 };
 

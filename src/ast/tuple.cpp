@@ -120,6 +120,10 @@ MValue* TupleAST::codegen(Context *ctx, MValueType *type) {
     LLVMContext &lctx = getGlobalContext();
     Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(lctx));
 
+    if(!hasPrecodegen) {
+        std::cerr << "TODO, tuple: has not precodegen\n";
+        preCodegen(ctx);
+    }
 
     std::vector<Value*> values;
     std::vector<Type*> types;
@@ -156,4 +160,11 @@ MValue* TupleAST::codegen(Context *ctx, MValueType *type) {
     }
 
     return new MValue({ttt,a});
+}
+
+void TupleAST::preCodegen(Context *ctx) {
+    for(MValueAST *v : *values) {
+        v->preCodegen(ctx);
+    }
+    hasPrecodegen = true;
 }
