@@ -27,18 +27,18 @@
 
 using namespace llvm;
 
-SlotType* SlotType::create ( Context *ctx, TupleType* argsType ) {
+SlotType* SlotType::create ( Context *ctx, TupleType* argsType, MValueType *returnType) {
     StructType *st = StructType::create ( lctx, {
         Type::getInt8PtrTy( lctx ),
         Type::getInt32Ty ( ctx->storage->module->getContext() ),
         //argsType->llvmType()
     }, "slot" );
-    SlotType * type = new SlotType ( st, argsType );
+    SlotType * type = new SlotType ( st, argsType, returnType );
     return type;
 }
 
 MValueType* SlotTypeAST::codegen ( Context* ctx ) {
-    return SlotType::create ( ctx, args->codegen ( ctx ) );
+    return SlotType::create ( ctx, args->codegen ( ctx ), returnType->codegen(ctx) );
 }
 
 void SlotDecl::codegen ( Context *_ctx ) {
@@ -89,6 +89,6 @@ void SlotDecl::collectSystemDecl ( Context *ctx ) const {
 
 
     TupleType *slotArgsTuple = this->args->codegen ( ctx );
-    SlotType *type = SlotType::create(ctx,slotArgsTuple);
+    SlotType *type = SlotType::create(ctx,slotArgsTuple,returnType->codegen(ctx));
     s->slotTypes.push_back ( type );
 }

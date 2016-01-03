@@ -14,10 +14,7 @@ procedure main2() async:
     let counter = spawn Counter
 
     counter.init( 0 )
-    stdout ! printfln( "%d", counter.next() )
-    stdout ! printfln( "%d", counter.next() )
-    stdout ! printfln( "%d", counter.next() )
-    stdout ! printfln( "%d", counter.next() )
+    #stdout ! printfln( "%d", counter.next() )
 
 procedure main():
     let m = spawn main2()

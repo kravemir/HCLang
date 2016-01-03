@@ -26,8 +26,20 @@
 
 using namespace llvm;
 
+class ProcedureContext : public Context {
+public:
+    ProcedureContext(Context *parent) : Context(parent) { }
+
+    virtual int addAwaitId(BasicBlock *b) {
+        blocks.push_back(b);
+        return blocks.size();
+    };
+
+    std::vector<BasicBlock*> blocks;
+};
+
 void ProcedureDecl::codegen(Context *_ctx) {
-    Context ctx (_ctx);
+    ProcedureContext ctx (_ctx);
     MValueType *returnType = this->returnType->codegen(_ctx);
 
     std::vector<std::pair<std::string,MValueType*> > args_types;
@@ -69,7 +81,7 @@ void ProcedureDecl::codegen(Context *_ctx) {
         args_tuple_type->llvmType()->dump();
 
 
-        std::vector<Type*> types({ ctx.storage->module->getTypeByName("struct.System") });
+        std::vector<Type*> types({ ctx.storage->module->getTypeByName("struct.System"), IntType::create(&ctx)->llvmType() });
         /*for( auto v : t->variables ) {
             types.push_back(v.second->llvmType());
         }*/
@@ -83,7 +95,7 @@ void ProcedureDecl::codegen(Context *_ctx) {
         FunctionType *msg_ft = FunctionType::get(
             Type::getVoidTy(ctx.storage->module->getContext()),
             {
-                Type::getInt8PtrTy(getGlobalContext()),
+                systemPtrType,
                 Type::getInt32Ty(getGlobalContext()),
                 args_tuple_type->llvmType()
             },
@@ -102,7 +114,8 @@ void ProcedureDecl::codegen(Context *_ctx) {
 
             // Create a new basic block to start insertion into.
             BasicBlock *BB = BasicBlock::Create(getGlobalContext(), "entry", process_fn);
-            Builder.SetInsertPoint(BB);
+            BasicBlock *BStart = BasicBlock::Create(getGlobalContext(), "start", process_fn);
+            Builder.SetInsertPoint(BStart);
 
             for( int i = 0; i < this->args->namedValues.size(); i++ ) {
                 auto v = this->args->namedValues[i];
@@ -120,6 +133,21 @@ void ProcedureDecl::codegen(Context *_ctx) {
                 stmt->codegen(&ctx);
 
             Builder.CreateRetVoid();
+
+            Builder.SetInsertPoint(BB);
+
+            if( ctx.blocks.size() ) {
+                Value* val = Builder.CreateLoad(Builder.CreateGEP(process_fn->arg_begin(), {
+                        ConstantInt::get(lctx,APInt((unsigned)32,(uint64_t)0)),
+                        ConstantInt::get(lctx,APInt((unsigned)32,(uint64_t)1)),
+                }), "state");
+                SwitchInst *SI = Builder.CreateSwitch(val, BStart, 0);
+                for(int i = 0; i < ctx.blocks.size(); i++) {
+                    SI->addCase(ConstantInt::get(lctx,APInt((unsigned)64,(uint64_t)(i+1))), ctx.blocks[i]);
+                }
+            } else {
+                Builder.CreateBr(BStart);
+            }
 
             process_fn->dump();
         }
@@ -167,6 +195,14 @@ void ProcedureDecl::codegen(Context *_ctx) {
                     instType->llvmType(),
                     "new_instance"
                 );
+
+            Builder.CreateStore(
+                Constant::getNullValue(IntegerType::getInt32Ty(lctx)),
+                Builder.CreateGEP(system_instance, {
+                    ConstantInt::get(lctx,APInt((unsigned)32,(uint64_t)0)),
+                    ConstantInt::get(lctx,APInt((unsigned)32,(uint64_t)1)),
+                })
+            );
 
             Function *finit = ctx.storage->module->getFunction("system_init");
             Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(lctx));

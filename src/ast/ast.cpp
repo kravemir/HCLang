@@ -71,6 +71,15 @@ void CallExpr::preCodegen(Context *ctx) {
                         v_args ? v_args->value() : zero
                 });
         Builder.CreateCall(finit,aadices)->dump();
+        Builder.CreateRetVoid();
+        Function *TheFunction = Builder.GetInsertBlock()->getParent();
+
+        BasicBlock *BB = BasicBlock::Create(getGlobalContext(), "await_continue");
+        TheFunction->getBasicBlockList().push_back(BB);
+        Builder.SetInsertPoint(BB);
+
+        int awaitId = ctx->addAwaitId(BB);
+        Value *val = ++(++(TheFunction->arg_begin()));
         precodegenVarId = 0;
     } else {
 

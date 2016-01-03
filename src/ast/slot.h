@@ -28,35 +28,40 @@
 
 class SlotType : public MValueType {
 public:
-    static SlotType* create ( Context *ctx, TupleType *argsType );
+    static SlotType* create ( Context *ctx, TupleType *argsType, MValueType *returnType );
 
 private:
-    SlotType ( llvm::Type* _llvmType, TupleType *argsTupleType ) :
+    SlotType ( llvm::Type* _llvmType, TupleType *argsTupleType, MValueType *returnType ) :
         MValueType ( _llvmType,false,0 ),
-        argsTupleType ( argsTupleType )
+        argsTupleType ( argsTupleType ),
+        returnType(returnType)
     {}
 
 public:
     TupleType* const argsTupleType;
+    MValueType* const returnType;
 };
 
 class SlotTypeAST : public MTypeAST {
 public:
-    SlotTypeAST ( MTupleTypeAST *args ) :
-        args ( args )
+    SlotTypeAST ( MTupleTypeAST *args, MTypeAST *returnType ) :
+        args ( args ),
+        returnType(returnType)
     {}
 
     virtual MValueType* codegen ( Context* ctx );
 
 public:
     MTupleTypeAST* const args;
+    MTypeAST* const returnType;
 };
 
 class SlotDecl : public Statement {
 public:
-    SlotDecl ( std::string name, MTupleTypeAST *args, StatementList *list ) :
+    SlotDecl ( std::string name, MTupleTypeAST *args, MTypeAST *returnType, StatementList *list ) :
         name ( name ),
         args ( args ),
+        returnType (returnType),
         stmts ( list )
     {}
 
@@ -69,6 +74,7 @@ public:
 private:
     std::string name;
     MTupleTypeAST *args;
+    MTypeAST *returnType;
     StatementList *stmts;
 };
 

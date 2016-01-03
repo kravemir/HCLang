@@ -150,6 +150,10 @@ struct Context {
         return 0;
     }
 
+    virtual int addAwaitId(llvm::BasicBlock *b) {
+        return -1;
+    }
+
     Context(ContextStorage *storage):
         storage(storage)
     {}

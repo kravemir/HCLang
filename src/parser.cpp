@@ -359,7 +359,7 @@ SlotDecl*        Parser::slotDecl() {
             break;
     }
 
-    return new SlotDecl( name, args, stmts);
+    return new SlotDecl( name, args, type, stmts);
 }
 
 ProcedureDecl*        Parser::procedureDecl() {
@@ -598,7 +598,7 @@ SlotTypeAST* Parser::slotTypeDecl() {
     if(!expectConsume(Token::SLOT)) return 0;
     MTupleTypeAST *tuple = tupleTypeDecl();
     if(!tuple) return 0;
-    return new SlotTypeAST(tuple);
+    return new SlotTypeAST(tuple, 0); // TODO: parse Return type
 }
 
 MTypeAST* Parser::unionTypeDecl() {
