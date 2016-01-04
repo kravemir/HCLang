@@ -36,6 +36,15 @@ public:
     };
 
     std::vector<BasicBlock*> blocks;
+
+    StructType *systemType;
+
+    virtual int createAlloc(MValueType *type) override {
+        allocaTypes.push_back(type->llvmType());
+        return allocaTypes.size() - 1;
+    }
+
+    std::vector<llvm::Type*> allocaTypes;
 };
 
 void ProcedureDecl::codegen(Context *_ctx) {
@@ -82,6 +91,13 @@ void ProcedureDecl::codegen(Context *_ctx) {
 
 
         std::vector<Type*> types({ ctx.storage->module->getTypeByName("struct.System"), IntType::create(&ctx)->llvmType() });
+
+        for(Statement *stmt : *stmts)
+            stmt->collectAlloc(&ctx);
+
+        for(llvm::Type *t : ctx.allocaTypes)
+            types.push_back(t);
+
         /*for( auto v : t->variables ) {
             types.push_back(v.second->llvmType());
         }*/
@@ -107,6 +123,7 @@ void ProcedureDecl::codegen(Context *_ctx) {
         Function *create_fn = Function::Create(create_ft, Function::ExternalLinkage, ctx.storage->prefix + name  + ".constructor", ctx.storage->module);
 
         ProcedureAsyncType *ptype = new ProcedureAsyncType(create_ft,instType);
+        ctx.systemType = systemType;
         _ctx->bindValue(name, new MValue(ptype,create_fn));
 
         {
@@ -114,6 +131,15 @@ void ProcedureDecl::codegen(Context *_ctx) {
 
             // Create a new basic block to start insertion into.
             BasicBlock *BB = BasicBlock::Create(getGlobalContext(), "entry", process_fn);
+            Builder.SetInsertPoint(BB);
+            for(int i = 0; i < ctx.allocaTypes.size(); i++) {
+                ctx.allocas.push_back(Builder.CreateGEP(process_fn->arg_begin(),
+                                         {
+                                                 ConstantInt::get(lctx, APInt((unsigned) 32, (uint64_t) 0)),
+                                                 ConstantInt::get(lctx, APInt((unsigned) 32, (uint64_t) i + 2)),
+                                         }
+                ));
+            }
             BasicBlock *BStart = BasicBlock::Create(getGlobalContext(), "start", process_fn);
             Builder.SetInsertPoint(BStart);
 

@@ -34,9 +34,7 @@ public:
     {}
 
     virtual void codegen(Context *ctx);
-    virtual void collectAlloc ( Context* ctx ) {
-        // TODO collect alloc of value
-    }
+    virtual void collectAlloc ( Context* ctx );
 
     virtual void print(Printer &p) const;
 
@@ -44,6 +42,7 @@ private:
     Path target;
     MTypeAST *letType;
     MValueAST *value;
+    int allocId;
 };
 
 

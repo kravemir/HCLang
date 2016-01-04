@@ -110,6 +110,11 @@ MValue* CallExpr::codegen(Context *ctx, MValueType *type) {
         return val;
     }
 }
+MValueType* SpawnExpr::calculateType(Context *ctx) {
+    MValue* v = ctx->getValue(name);
+    assert(v);
+    return v->type;
+}
 MValue* SpawnExpr::codegen(Context *ctx, MValueType *type) {
     MValue* v = ctx->getValue(name);
     assert(v);
