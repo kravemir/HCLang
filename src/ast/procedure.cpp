@@ -163,13 +163,14 @@ void ProcedureDecl::codegen(Context *_ctx) {
             Builder.SetInsertPoint(BB);
 
             if( ctx.blocks.size() ) {
-                Value* val = Builder.CreateLoad(Builder.CreateGEP(process_fn->arg_begin(), {
+                /*Value* val = Builder.CreateLoad(Builder.CreateGEP(process_fn->arg_begin(), {
                         ConstantInt::get(lctx,APInt((unsigned)32,(uint64_t)0)),
                         ConstantInt::get(lctx,APInt((unsigned)32,(uint64_t)1)),
-                }), "state");
+                }), "state");*/
+                Value *val = ++(process_fn->arg_begin());
                 SwitchInst *SI = Builder.CreateSwitch(val, BStart, 0);
                 for(int i = 0; i < ctx.blocks.size(); i++) {
-                    SI->addCase(ConstantInt::get(lctx,APInt((unsigned)64,(uint64_t)(i+1))), ctx.blocks[i]);
+                    SI->addCase(ConstantInt::get(lctx,APInt((unsigned)32,(uint64_t)(i+1))), ctx.blocks[i]);
                 }
             } else {
                 Builder.CreateBr(BStart);

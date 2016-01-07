@@ -76,6 +76,7 @@ private:
     MTupleTypeAST *args;
     MTypeAST *returnType;
     StatementList *stmts;
+    mutable SlotType *type;
 };
 
 #endif // HCLANG_AST_SLOT_H

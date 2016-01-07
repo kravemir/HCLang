@@ -58,10 +58,39 @@ void CallExpr::preCodegen(Context *ctx) {
 
     SlotType *st = dynamic_cast<SlotType *>(ft);
     if (st) {
+        Function *TheFunction = Builder.GetInsertBlock()->getParent();
+        BasicBlock *BB = BasicBlock::Create(getGlobalContext(), "await_continue");
+        int awaitId = ctx->addAwaitId(BB);
         MValue *ma = val->codegen(ctx);
         Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(lctx));
         args->preCodegen(ctx);
-        MValue *v_args = args->codegen(ctx);
+
+        MValue *v_args = args->codegen(ctx,st->argsTupleType);
+
+        TupleType *argtype = TupleType::create({ {"val",st->returnType} });
+        SlotType *type = SlotType::create(ctx,argtype,0);
+        Value *self = TheFunction->arg_begin();
+        Value *val_with_system = Builder.CreateInsertValue(
+                UndefValue::get(type->llvmType()),
+                self,
+                { 0 },
+                "slotref.system"
+        );
+        Value *val_with_msgid = Builder.CreateInsertValue(
+                val_with_system,
+                ConstantInt::get(lctx, APInt(32, (uint64_t) awaitId)),
+                { 1 },
+                "slotref.msgid"
+        );
+        Builder.CreateStore(
+                val_with_msgid,
+                Builder.CreateGEP(v_args->value(), {
+                        ConstantInt::get(lctx,APInt(32,(uint64_t)0)),
+                        ConstantInt::get(lctx,APInt(32,(uint64_t)args->values->size()))
+                })
+        );
+
+
         Function *finit = ctx->storage->module->getFunction("system_putMsg");
         ma->value()->dump();
         std::vector<llvm::Value*> aadices(
@@ -72,14 +101,17 @@ void CallExpr::preCodegen(Context *ctx) {
                 });
         Builder.CreateCall(finit,aadices)->dump();
         Builder.CreateRetVoid();
-        Function *TheFunction = Builder.GetInsertBlock()->getParent();
 
-        BasicBlock *BB = BasicBlock::Create(getGlobalContext(), "await_continue");
         TheFunction->getBasicBlockList().push_back(BB);
         Builder.SetInsertPoint(BB);
 
-        int awaitId = ctx->addAwaitId(BB);
-        Value *val = ++(++(TheFunction->arg_begin()));
+        Value *retVal = Builder.CreateLoad(
+                Builder.CreateGEP(
+                        Builder.CreateBitCast(++(++(TheFunction->arg_begin())), argtype->llvmType()),
+                        std::vector<llvm::Value*>(2,zero)
+                )
+        );
+
         precodegenVarId = 0;
     } else {
 
@@ -322,6 +354,7 @@ void ForStmt::collectAlloc ( Context* ctx ) {
 
 void ReturnStmt::codegen(Context *ctx) {
     MValue *value = val->codegen(ctx);
+    if(ctx->doCustomReturn(value)) return;
     Builder.CreateRet(value->value());
 }
 void TypeDecl::codegen(Context *ctx) {

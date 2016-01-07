@@ -163,6 +163,11 @@ struct Context {
         return allocas[id];
     }
 
+    /* TODO: remove this function */
+    virtual bool doCustomReturn(MValue *value) {
+        return false;
+    }
+
     Context(ContextStorage *storage):
         storage(storage)
     {}

@@ -33,31 +33,56 @@ SlotType* SlotType::create ( Context *ctx, TupleType* argsType, MValueType *retu
         Type::getInt32Ty ( ctx->storage->module->getContext() ),
         //argsType->llvmType()
     }, "slot" );
+
+    ((PointerType*)argsType->llvmType())->getElementType()->dump();
     SlotType * type = new SlotType ( st, argsType, returnType );
     return type;
 }
 
 MValueType* SlotTypeAST::codegen ( Context* ctx ) {
-    return SlotType::create ( ctx, args->codegen ( ctx ), returnType->codegen(ctx) );
+    TupleType *argsType = args->codegen ( ctx );
+    MValueType *retType = 0;
+    if(returnType) {
+        retType = returnType->codegen(ctx);
+        SlotType *rst = SlotType::create(ctx, TupleType::create( { {"val",retType} } ), 0 );
+        std::vector<std::pair<std::string,MValueType*>> namedValues = argsType->namedValues;
+        namedValues.push_back({"return_slot", rst});
+        argsType = TupleType::create(namedValues);
+    }
+    return SlotType::create ( ctx, argsType, retType );
 }
+
+class SlotContext : public Context {
+public:
+    SlotContext(Context *parent, SlotType *type) :
+        Context(parent),
+        type(type)
+    { }
+
+
+    virtual bool doCustomReturn(MValue *value) override;
+
+private:
+    SlotType *type;
+};
 
 void SlotDecl::codegen ( Context *_ctx ) {
     SystemType *s = _ctx->storage->system;
     TupleType *slotArgsTuple = s->slotTypes[s->slotIds[name]]->argsTupleType;
 
-    Context ctx ( _ctx );
     std::vector<llvm::Type*> args;
-    args.push_back ( ctx.storage->system->llvmType() );
+    args.push_back ( _ctx->storage->system->llvmType() );
     args.push_back ( slotArgsTuple->llvmType() );
     llvm::FunctionType *FT = llvm::FunctionType::get (
                                  llvm::Type::getVoidTy ( llvm::getGlobalContext() ), args, false );
 
-    Function *F = Function::Create ( FT, Function::PrivateLinkage, ctx.storage->prefix + name, ctx.storage->module );
+    Function *F = Function::Create ( FT, Function::PrivateLinkage, _ctx->storage->prefix + name, _ctx->storage->module );
 
     // Create a new basic block to start insertion into.
     BasicBlock *BB = BasicBlock::Create ( getGlobalContext(), "entry", F );
     Builder.SetInsertPoint ( BB );
 
+    SlotContext ctx ( _ctx, this->type );
     ctx.bindValue ( "self", new MValue ( { ctx.storage->system, F->arg_begin() } ) );
     for ( int i = 0; i < this->args->namedValues.size(); i++ ) {
         auto v = this->args->namedValues[i];
@@ -88,7 +113,59 @@ void SlotDecl::collectSystemDecl ( Context *ctx ) const {
     s->slotIds[name] = s->slotCount++;
 
 
-    TupleType *slotArgsTuple = this->args->codegen ( ctx );
-    SlotType *type = SlotType::create(ctx,slotArgsTuple,returnType->codegen(ctx));
+    TupleType *argsType = this->args->codegen ( ctx );
+    MValueType *retType = 0;
+    if(returnType) {
+        retType = returnType->codegen(ctx);
+        SlotType *rst = SlotType::create(ctx, TupleType::create( { {"val",retType} } ), 0 );
+        std::vector<std::pair<std::string,MValueType*>> namedValues = argsType->namedValues;
+        namedValues.push_back({"return_slot", rst});
+        argsType = TupleType::create(namedValues);
+    }
+    this->type = SlotType::create(ctx,argsType,retType);
     s->slotTypes.push_back ( type );
+}
+
+bool SlotContext::doCustomReturn(MValue *value) {
+    if(type->returnType) {
+        TupleType *tt = TupleType::create({ {"val",type->returnType} });
+        int size = storage->module->getDataLayout().getTypeAllocSize(
+                ((PointerType*)tt->llvmType())->getElementType()
+        );
+        std::vector<Value *> fmalloc_args({ConstantInt::get(lctx,APInt(64,(uint64_t)size))});
+        Function *fmalloc = storage->module->getFunction("malloc");
+        Value *call = Builder.CreateCall(fmalloc, fmalloc_args, "tuple_alloc");
+        Value *a = Builder.CreateBitCast(call, tt->llvmType(), "tuple");
+        Value *valPtr = Builder.CreateGEP(a, {
+                ConstantInt::get(lctx, APInt(32, (uint64_t) 0)),
+                ConstantInt::get(lctx, APInt(32, (uint64_t) 0))
+        });
+        Builder.CreateStore(value->value(), valPtr);
+
+        Function *finit = storage->module->getFunction("system_putMsg");
+        Function* TheFunction = Builder.GetInsertBlock()->getParent();
+        Value *ma = ++(TheFunction->arg_begin());
+        ma->getType()->dump();
+        std::vector<llvm::Value*> aadices(
+                {
+                        Builder.CreateLoad(Builder.CreateGEP(
+                                ma,
+                                {
+                                        (Value *) ConstantInt::get(lctx, APInt(32, (uint64_t) 0)),
+                                        (Value *) ConstantInt::get(lctx, APInt(32, (uint64_t) type->argsTupleType->namedValues.size() -1)),
+                                        (Value *) ConstantInt::get(lctx, APInt(32, (uint64_t) 0))
+                                })),
+                        Builder.CreateLoad(Builder.CreateGEP(
+                                ma,
+                                {
+                                        (Value *) ConstantInt::get(lctx, APInt(32, (uint64_t) 0)),
+                                        (Value *) ConstantInt::get(lctx, APInt(32, (uint64_t) type->argsTupleType->namedValues.size() -1)),
+                                        (Value *) ConstantInt::get(lctx, APInt(32, (uint64_t) 1))
+                                })),
+                        valPtr
+                });
+        Builder.CreateCall(finit,aadices);
+        return true;
+    }
+    return false;
 }

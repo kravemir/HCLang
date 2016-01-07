@@ -1,12 +1,13 @@
 system Counter:
     var count : int
 
-    slot init( start : int ) void:
+    slot init( start : int ) int:
         self.count = start
+        return 1
 
     slot next() int:
         self.count = self.count + 1
-        stdout ! printfln("Counter received: %d", self.count)
+        stdout ! printfln("Counter sending: %d", self.count)
         return self.count
 
 procedure main2() async:
@@ -14,7 +15,12 @@ procedure main2() async:
     let counter = spawn Counter
 
     counter.init( 0 )
-    stdout ! printfln( "%d", counter.next() )
+    stdout ! printfln( "Counter Initialized" )
+
+    stdout ! printfln( "Procedure received: %d", counter.next() )
+    stdout ! printfln( "Procedure received: %d", counter.next() )
+    stdout ! printfln( "Procedure received: %d", counter.next() )
+    stdout ! printfln( "Procedure received: %d", counter.next() )
 
 procedure main():
     spawn main2()
