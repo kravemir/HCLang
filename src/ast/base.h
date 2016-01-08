@@ -385,6 +385,7 @@ public:
 private:
     int precodegenVarId = -1;
     MValueAST *val;
+    MValue *asyncCallResult;
     TupleAST *args;
 };
 

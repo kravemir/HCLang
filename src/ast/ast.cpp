@@ -111,6 +111,7 @@ void CallExpr::preCodegen(Context *ctx) {
                         std::vector<llvm::Value*>(2,zero)
                 )
         );
+        asyncCallResult = new MValue(st->returnType,retVal);
 
         precodegenVarId = 0;
     } else {
@@ -129,8 +130,7 @@ MValue* CallExpr::codegen(Context *ctx, MValueType *type) {
     SlotType *st = dynamic_cast<SlotType *>(ft);
     if (st) {
         assert( precodegenVarId != -1 );
-        Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(lctx));
-        return new MValue(IntType::create(ctx),zero); // TODO value
+        return asyncCallResult;
     } else {
         if (!ft->callable) {
             std::cerr << "Can't use as function\n" << std::endl;
