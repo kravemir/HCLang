@@ -20,50 +20,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_SYSTEM_H
-#define HCLANG_AST_SYSTEM_H
+#ifndef HCLANG_AST_STMTSEND_H
+#define HCLANG_AST_STMTSEND_H
 
-#include "base.h"
+#include "ast/base.h"
 
-class SlotType;
-
-struct SystemType : MValueType {
-    int slotCount = 0;
-    std::map<std::string,int> slotIds;
-    std::vector<llvm::Function*> slots;
-    std::vector<SlotType*> slotTypes;
-    llvm::Function *fn_new;
-
-    std::vector<std::pair<std::string,MValueType*>> variables;
-
-
-    virtual llvm::Type* llvmType() const {
-        return _llvmType;
-    }
-    virtual MValue* getChild(MValue *src, std::string name);
-
-
-    virtual MValueType *getChildType(std::string name) override;
-
-    llvm::Type* _llvmType;
-};
-
-struct SystemDecl : Statement {
-    SystemDecl( std::string name, StatementList *list ):
-        name(name),
-        stmts(list)
-    {}
+class SendStmt : public Statement {
+public:
+    SendStmt(Path target, std::string msg, TupleAST *args);
 
     virtual void codegen(Context *ctx);
-    virtual void collectAlloc ( Context* ctx ) {};
+    virtual void collectAlloc ( Context* ctx );
 
     virtual void print(Printer &p) const;
-
 private:
-    llvm::Function* codegen_msghandler(Context *ctx);
-
-    std::string name;
-    StatementList *stmts;
+    Path target;
+    std::string msg;
+    TupleAST *args;
 };
 
-#endif // HCLANG_AST_SYSTEM_H
+
+#endif // HCLANG_AST_STMTSEND_H

@@ -22,7 +22,6 @@
  */
 #include "slot.h"
 
-#include "tuple.h"
 #include "system.h"
 
 using namespace llvm;

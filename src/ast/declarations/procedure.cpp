@@ -22,7 +22,7 @@
  */
 #include "procedure.h"
 
-#include "tuple.h"
+#include "ast/types/tuple.h"
 
 using namespace llvm;
 

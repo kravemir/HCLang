@@ -20,28 +20,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_STMT_VAR_H
-#define HCLANG_AST_STMT_VAR_H
+#ifndef HCLANG_AST_CALL_EXPR_H
+#define HCLANG_AST_CALL_EXPR_H
 
-#include "base.h"
+#include "ast/base.h"
 
-class VarDecl : public Statement {
+class CallExpr : public MValueAST {
 public:
-    VarDecl(std::string name, MTypeAST *type, MValueAST *val);
+    CallExpr( MValueAST *val, TupleAST *args ):
+            val(val),
+            args(args)
+    {}
 
-    virtual void codegen(Context *ctx);
-    virtual void collectSystemDecl(Context *ctx) const;
-    virtual void collectAlloc ( Context* ctx );
-
-    virtual void print(Printer &p) const;
+    virtual void preCodegen(Context *ctx);
+    virtual MValueType* calculateType(Context *ctx);
+    virtual MValue* codegen(Context *ctx, MValueType *type = 0);
+    std::string toString() const;
 
 private:
-    std::string name;
-    MTypeAST *type;
+    int precodegenVarId = -1;
     MValueAST *val;
-
-    MValueType *typeVal;
-    llvm::AllocaInst *alloc = 0;
+    MValue *asyncCallResult;
+    TupleAST *args;
 };
 
-#endif //HCLANG_AST_STMT_VAR_H
+#endif //HCLANG_AST_CALL_EXPR_H

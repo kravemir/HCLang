@@ -20,21 +20,30 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_STMT_RETURN_H
-#define HCLANG_AST_STMT_RETURN_H
+#ifndef HCLANG_AST_STMT_LET_H
+#define HCLANG_AST_STMT_LET_H
 
-#include "base.h"
+#include "ast/base.h"
 
-class ReturnStmt : public Statement {
+class LetStmt : public Statement {
 public:
-    ReturnStmt(MValueAST *val);
+    LetStmt(Path target, MTypeAST *letType, MValueAST *value):
+        target(target),
+        letType(letType),
+        value(value)
+    {}
 
     virtual void codegen(Context *ctx);
     virtual void collectAlloc ( Context* ctx );
 
     virtual void print(Printer &p) const;
+
 private:
-    MValueAST *val;
+    Path target;
+    MTypeAST *letType;
+    MValueAST *value;
+    int allocId;
 };
 
-#endif //HCLANG_AST_STMT_RETURN_H
+
+#endif // HCLANG_AST_STMT_LET_H

@@ -20,13 +20,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include "stmt_send.h"
+#include "send.h"
 
 using namespace llvm;
 
-#include "tuple.h"
-#include "system.h"
-#include "slot.h"
+#include "ast/types/tuple.h"
+#include "ast/declarations/system.h"
+#include "ast/declarations/slot.h"
 
 #include "llvm/ADT/ArrayRef.h"
 

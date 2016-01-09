@@ -20,27 +20,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_STMT_EXPR_H
-#define HCLANG_AST_STMT_EXPR_H
 
-#include "base.h"
+#include "expr.h"
 
-class ExprStmt : public Statement {
-public:
-    ExprStmt(MValueAST *value):
-        value(value)
-    {}
+#include "printer.h"
+#include "printer.h"
 
-    virtual void codegen(Context *ctx);
-    virtual void collectAlloc ( Context* ctx ) {
-        // TODO collect expr
-    }
+void ExprStmt::codegen(Context *ctx) {
+    value->preCodegen(ctx);
+    value->codegen(ctx);
+}
 
-    virtual void print(Printer &p) const;
-
-private:
-    MValueAST *value;
-};
-
-
-#endif // HCLANG_AST_STMT_EXPR_H
+void ExprStmt::print(Printer &p) const {
+    p.println( value->toString());
+}

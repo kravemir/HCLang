@@ -20,28 +20,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include "stmt_let.h"
+#ifndef HCLANG_AST_STMT_EXPR_H
+#define HCLANG_AST_STMT_EXPR_H
 
-#include "printer.h"
+#include "ast/base.h"
 
-void LetStmt::codegen(Context *ctx) {
-    MValueType *t = 0;
-    if( letType )
-        t = letType->codegen(ctx);
+class ExprStmt : public Statement {
+public:
+    ExprStmt(MValueAST *value):
+        value(value)
+    {}
 
-    llvm::Value* alloca = ctx->getAlloc(this->allocId);
-    MValue *val;
-    val = value->codegen(ctx, t);
-    Builder.CreateStore(val->value(), alloca);
-    ctx->bindValue(target[0], new MValue(val->type,alloca,true)); // TODO
-}
+    virtual void codegen(Context *ctx);
+    virtual void collectAlloc ( Context* ctx ) {
+        // TODO collect expr
+    }
 
-void LetStmt::collectAlloc(Context *ctx) {
-    MValueType *t = letType ? letType->codegen(ctx) : value->calculateType(ctx);
-    assert(t);
-    this->allocId = ctx->createAlloc(t);
-}
+    virtual void print(Printer &p) const;
 
-void LetStmt::print(Printer &p) const {
-    p.println( target[0] + " = " + value->toString()); // TODO
-}
+private:
+    MValueAST *value;
+};
+
+
+#endif // HCLANG_AST_STMT_EXPR_H

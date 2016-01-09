@@ -25,23 +25,23 @@
 
 #include "base.h"
 
-#include "array.h"
-#include "tuple.h"
-#include "union.h"
-#include "system.h"
+#include "declarations/system.h"
+#include "declarations/slot.h"
+#include "declarations/procedure.h"
 
-#include "slot.h"
-#include "procedure.h"
+#include "types/array.h"
+#include "types/tuple.h"
+#include "types/union.h"
 
-#include "stmt_let.h"
-#include "stmt_send.h"
-#include "stmt_expr.h"
-#include "stmt_return.h"
-#include "stmt_for.h"
-#include "stmt_var.h"
+#include "statements/let.h"
+#include "statements/send.h"
+#include "statements/expr.h"
+#include "statements/return.h"
+#include "statements/for.h"
+#include "statements/var.h"
 
-#include "expr_binop.h"
-#include "expr_call.h"
-#include "expr_cond.h"
+#include "expressions/binop.h"
+#include "expressions/call.h"
+#include "expressions/cond.h"
 
 #endif // HCLANG_AST_AST_H

@@ -20,28 +20,52 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_CALL_EXPR_H
-#define HCLANG_AST_CALL_EXPR_H
+#ifndef HCLANG_AST_PROCEDURE_H
+#define HCLANG_AST_PROCEDURE_H
 
-#include "base.h"
+#include "ast/base.h"
 
-class CallExpr : public MValueAST {
-public:
-    CallExpr( MValueAST *val, TupleAST *args ):
-            val(val),
-            args(args)
+struct ProcedureType : MValueType {
+    ProcedureType(llvm::Type* _llvmType, MValueType *retType):
+        MValueType(_llvmType,true,retType)
     {}
-
-    virtual void preCodegen(Context *ctx);
-    virtual MValueType* calculateType(Context *ctx);
-    virtual MValue* codegen(Context *ctx, MValueType *type = 0);
-    std::string toString() const;
-
-private:
-    int precodegenVarId = -1;
-    MValueAST *val;
-    MValue *asyncCallResult;
-    TupleAST *args;
 };
 
-#endif //HCLANG_AST_CALL_EXPR_H
+struct ProcedureAsyncInstanceType : MValueType {
+    ProcedureAsyncInstanceType(llvm::Type* _llvmType):
+        MValueType(_llvmType)
+    {}
+};
+
+struct ProcedureAsyncType : MValueType {
+    ProcedureAsyncType(llvm::Type* _llvmType, MValueType *retType):
+        MValueType(_llvmType,true,retType)
+    {}
+};
+
+class ProcedureDecl : public Statement {
+public:
+    ProcedureDecl( std::string name, MTupleTypeAST *args, MTypeAST *retType, StatementList *list, bool async ):
+        name(name),
+        args(args),
+        returnType(retType),
+        stmts(list),
+        async(async)
+    {
+        assert(returnType);
+    }
+
+    virtual void codegen(Context *ctx);
+    virtual void collectAlloc ( Context* ctx ) {}
+
+    virtual void print(Printer &p) const;
+
+private:
+    std::string name;
+    MTupleTypeAST *args;
+    MTypeAST *returnType;
+    StatementList *stmts;
+    bool async;
+};
+
+#endif // HCLANG_AST_PROCEDURE_H

@@ -20,32 +20,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include "stmt_var.h"
+#include "return.h"
 
-#include "system.h"
-
-using namespace llvm;
-
-void VarDecl::codegen(Context *ctx) {
-    // TODO: QUICKFIX - don't compile as system decl
-    if(dynamic_cast<SystemContext*>(ctx) != 0) {
-        return;
-    }
-    assert(alloc);
-    MValue *v = val->codegen(ctx,typeVal);
-    Builder.CreateStore(v->value(), alloc);
-    ctx->bindValue(name, new MValue(v->type,alloc,true));
+void ReturnStmt::collectAlloc(Context *ctx) {
+    // TODO, collect alloc
 }
 
-void VarDecl::collectAlloc(Context *ctx) {
-    if( type )
-        typeVal = type->codegen(ctx);
-    else
-        typeVal = val->calculateType(ctx);
-    alloc = Builder.CreateAlloca(typeVal->llvmType(), nullptr, "var." + name + ".alloca");
-}
-
-void VarDecl::collectSystemDecl(Context *ctx) const {
-    SystemType *s = ctx->storage->system;
-    s->variables.push_back(make_pair(name,type->codegen(ctx)));
+void ReturnStmt::codegen(Context *ctx) {
+    MValue *value = val->codegen(ctx);
+    if(ctx->doCustomReturn(value)) return;
+    Builder.CreateRet(value->value());
 }

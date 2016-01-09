@@ -20,14 +20,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include "stmt_return.h"
+#ifndef HCLANG_AST_EXPR_COND_H
+#define HCLANG_AST_EXPR_COND_H
 
-void ReturnStmt::collectAlloc(Context *ctx) {
-    // TODO, collect alloc
-}
+#include "ast/base.h"
 
-void ReturnStmt::codegen(Context *ctx) {
-    MValue *value = val->codegen(ctx);
-    if(ctx->doCustomReturn(value)) return;
-    Builder.CreateRet(value->value());
-}
+class CondExpr : public MValueAST {
+public:
+    CondExpr(MValueAST *cond, MValueAST *thenVal, MValueAST *elseVal):
+            cond(cond),
+            thenVal(thenVal),
+            elseVal(elseVal)
+    {}
+
+    virtual MValueType* calculateType(Context *ctx);
+    virtual MValue* codegen(Context *ctx, MValueType *type = 0);
+    virtual std::string toString() const;
+
+private:
+    MValueAST *cond, *thenVal, *elseVal;
+};
+
+#endif //HCLANG_AST_EXPR_COND_H

@@ -20,17 +20,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
-#include "stmt_expr.h"
+#include "let.h"
 
 #include "printer.h"
-#include "printer.h"
 
-void ExprStmt::codegen(Context *ctx) {
-    value->preCodegen(ctx);
-    value->codegen(ctx);
+void LetStmt::codegen(Context *ctx) {
+    MValueType *t = 0;
+    if( letType )
+        t = letType->codegen(ctx);
+
+    llvm::Value* alloca = ctx->getAlloc(this->allocId);
+    MValue *val;
+    val = value->codegen(ctx, t);
+    Builder.CreateStore(val->value(), alloca);
+    ctx->bindValue(target[0], new MValue(val->type,alloca,true)); // TODO
 }
 
-void ExprStmt::print(Printer &p) const {
-    p.println( value->toString());
+void LetStmt::collectAlloc(Context *ctx) {
+    MValueType *t = letType ? letType->codegen(ctx) : value->calculateType(ctx);
+    assert(t);
+    this->allocId = ctx->createAlloc(t);
+}
+
+void LetStmt::print(Printer &p) const {
+    p.println( target[0] + " = " + value->toString()); // TODO
 }

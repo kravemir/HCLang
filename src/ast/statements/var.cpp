@@ -20,41 +20,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_UNION_H
-#define HCLANG_AST_UNION_H
+#include "var.h"
 
-#include "base.h"
+#include "ast/declarations/system.h"
 
-struct MUnionType : MValueType {
-    MUnionType(std::vector<MValueType*> alternatives, int size):
-        alternatives(alternatives),
-        size(size)
-    {}
+using namespace llvm;
 
+void VarDecl::codegen(Context *ctx) {
+    // TODO: QUICKFIX - don't compile as system decl
+    if(dynamic_cast<SystemContext*>(ctx) != 0) {
+        return;
+    }
+    assert(alloc);
+    MValue *v = val->codegen(ctx,typeVal);
+    Builder.CreateStore(v->value(), alloc);
+    ctx->bindValue(name, new MValue(v->type,alloc,true));
+}
 
-    void add(MValueType* t) {}; // TODO
-    virtual llvm::Type* llvmType() const;
+void VarDecl::collectAlloc(Context *ctx) {
+    if( type )
+        typeVal = type->codegen(ctx);
+    else
+        typeVal = val->calculateType(ctx);
+    alloc = Builder.CreateAlloca(typeVal->llvmType(), nullptr, "var." + name + ".alloca");
+}
 
-    virtual std::pair<llvm::Value*,MValue*> matchCond(std::string targetName, MValue* src, Context *ctx);
-    virtual MValue* createCast(Context *ctx, MValue *src);
-
-private:
-    std::vector<MValueType*> alternatives;
-    int size;
-
-    llvm::Type *_llvmType = 0;
-};
-
-class MUnionTypeAST : public MTypeAST {
-public:
-    MUnionTypeAST(std::vector<MTypeAST*> values):
-        values(values)
-    {}
-
-    virtual MValueType* codegen(Context *ctx);
-
-private:
-    std::vector<MTypeAST*> values;
-};
-
-#endif // HCLANG_AST_UNION_H
+void VarDecl::collectSystemDecl(Context *ctx) const {
+    SystemType *s = ctx->storage->system;
+    s->variables.push_back(make_pair(name,type->codegen(ctx)));
+}

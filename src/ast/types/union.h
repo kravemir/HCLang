@@ -20,25 +20,41 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_EXPR_COND_H
-#define HCLANG_AST_EXPR_COND_H
+#ifndef HCLANG_AST_UNION_H
+#define HCLANG_AST_UNION_H
 
-#include "base.h"
+#include "ast/base.h"
 
-class CondExpr : public MValueAST {
-public:
-    CondExpr(MValueAST *cond, MValueAST *thenVal, MValueAST *elseVal):
-            cond(cond),
-            thenVal(thenVal),
-            elseVal(elseVal)
+struct MUnionType : MValueType {
+    MUnionType(std::vector<MValueType*> alternatives, int size):
+        alternatives(alternatives),
+        size(size)
     {}
 
-    virtual MValueType* calculateType(Context *ctx);
-    virtual MValue* codegen(Context *ctx, MValueType *type = 0);
-    virtual std::string toString() const;
+
+    void add(MValueType* t) {}; // TODO
+    virtual llvm::Type* llvmType() const;
+
+    virtual std::pair<llvm::Value*,MValue*> matchCond(std::string targetName, MValue* src, Context *ctx);
+    virtual MValue* createCast(Context *ctx, MValue *src);
 
 private:
-    MValueAST *cond, *thenVal, *elseVal;
+    std::vector<MValueType*> alternatives;
+    int size;
+
+    llvm::Type *_llvmType = 0;
 };
 
-#endif //HCLANG_AST_EXPR_COND_H
+class MUnionTypeAST : public MTypeAST {
+public:
+    MUnionTypeAST(std::vector<MTypeAST*> values):
+        values(values)
+    {}
+
+    virtual MValueType* codegen(Context *ctx);
+
+private:
+    std::vector<MTypeAST*> values;
+};
+
+#endif // HCLANG_AST_UNION_H

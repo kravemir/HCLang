@@ -20,9 +20,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include "expr_call.h"
+#include "call.h"
 
-#include "slot.h"
+#include "ast/declarations/slot.h"
 
 using namespace llvm;
 
