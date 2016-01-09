@@ -48,18 +48,18 @@ public:
 };
 
 void ProcedureDecl::codegen(Context *_ctx) {
-    ProcedureContext ctx (_ctx);
     MValueType *returnType = this->returnType->codegen(_ctx);
 
     std::vector<std::pair<std::string,MValueType*> > args_types;
     std::vector<llvm::Type*> args_llvmtypes;
     for( auto &v : this->args->namedValues ) {
-        auto t = v.second->codegen(&ctx);
+        auto t = v.second->codegen(_ctx);
         args_types.push_back( {v.first,t} );
         args_llvmtypes.push_back(t->llvmType());
     }
 
     if( async == false ) {
+        Context ctx (_ctx);
         llvm::FunctionType *FT = llvm::FunctionType::get(returnType->llvmType(), args_llvmtypes, false);
         Function *F = Function::Create(FT, Function::ExternalLinkage, ctx.storage->prefix + name, ctx.storage->module);
         auto *ft = new ProcedureType(FT,returnType);
@@ -85,6 +85,7 @@ void ProcedureDecl::codegen(Context *_ctx) {
 
         F->dump();
     } else {
+        ProcedureContext ctx (_ctx);
         TupleType *args_tuple_type = TupleType::create(args_types, name + ".args_tuple" );
         ((PointerType*)args_tuple_type->llvmType())->getTypeAtIndex((unsigned)0)->dump();
         args_tuple_type->llvmType()->dump();

@@ -376,9 +376,7 @@ public:
     {}
 
     virtual void preCodegen(Context *ctx);
-    virtual MValueType* calculateType(Context *ctx) {
-        // TODO: calculateType
-    };
+    virtual MValueType* calculateType(Context *ctx);
     virtual MValue* codegen(Context *ctx, MValueType *type = 0);
     std::string toString() const;
 

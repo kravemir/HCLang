@@ -37,7 +37,9 @@ void LetStmt::codegen(Context *ctx) {
 }
 
 void LetStmt::collectAlloc(Context *ctx) {
-    this->allocId = ctx->createAlloc(letType ? letType->codegen(ctx) : value->calculateType(ctx));
+    MValueType *t = letType ? letType->codegen(ctx) : value->calculateType(ctx);
+    assert(t);
+    this->allocId = ctx->createAlloc(t);
 }
 
 void LetStmt::print(Printer &p) const {

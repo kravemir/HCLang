@@ -51,6 +51,10 @@ MValue* VarExpr::codegen(Context *ctx, MValueType *type) {
     assert(v);
     return v;
 }
+MValueType* CallExpr::calculateType(Context *ctx) {
+    MValueType *ft = val->calculateType(ctx);
+    return ft->callReturnType();
+};
 void CallExpr::preCodegen(Context *ctx) {
     val->preCodegen(ctx);
     MValueType *ft = val->calculateType(ctx);

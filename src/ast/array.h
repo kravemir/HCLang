@@ -42,6 +42,8 @@ struct MArrayType : MValueType {
     virtual llvm::Type* llvmType() const {
         return type;
     }
+
+    static MArrayType* create( MValueType *elementType );
 };
 
 struct MArrayTypeAST : MTypeAST {
