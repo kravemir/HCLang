@@ -26,6 +26,23 @@
 
 using namespace llvm;
 
+MValueType *SystemType::getChildType(std::string name) {
+    int i = 0;
+    for(; i < variables.size(); i++)
+        if(variables[i].first == name) break;
+    if(i != variables.size())
+        return variables[i].second;
+
+    i = -1;
+    for(auto v : slotIds)
+        if(v.first == name) {
+            i = v.second;
+            break;
+        }
+    if(i != -1)
+        return slotTypes[i];
+}
+
 MValue* SystemType::getChild(MValue *src, std::string name) {
     int i = 0;
     for(; i < variables.size(); i++)
@@ -211,6 +228,4 @@ void SystemDecl::codegen(Context *_ctx) {
     Builder.CreateCall(finit,init_args);
     Builder.CreateRet(system_instance);
 }
-
-
 

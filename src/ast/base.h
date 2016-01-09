@@ -59,6 +59,8 @@ struct MValueType {
 
     virtual ~MValueType() {};
 
+    virtual MValueType* getChildType(std::string name) { assert( 0 && "Type doesn't have children"); return 0; };
+
     virtual MValue* getChild(MValue *src, std::string name) { return 0; }
     virtual MValue* getArrayChild(MValue *src, llvm::Value *index) { return 0; }
 
@@ -108,6 +110,11 @@ struct ContextStorage {
     std::string prefix;
 };
 
+class Block {
+public:
+    virtual void createBr();
+};
+
 struct Context {
     ContextStorage *storage;
 
@@ -117,7 +124,7 @@ struct Context {
     std::map<std::string,MValue*> shadowed_variables;
     std::set<std::string> extra_variables;
 
-    void bindValue(std::string name, MValue* value) {
+    virtual void bindValue(std::string name, MValue* value) {
         MValue *old = getValue(name,false);
         if(old)
             shadowed_values[name] = old;
@@ -136,11 +143,29 @@ struct Context {
             return it->second;
         return 0;
     }
-    MValue* getValue(std::string name, bool fallToVariable = true) {
+    virtual MValue* getValue(std::string name, bool fallToVariable = true) {
         auto it = storage->values.find(name);
         if( it != storage->values.end() )
             return it->second;
         return 0;
+    }
+
+    virtual int addAwaitId(llvm::BasicBlock *b) {
+        return -1;
+    }
+
+    virtual int createAlloc(MValueType *type) {
+        allocas.push_back(Builder.CreateAlloca(type->llvmType()));
+        return allocas.size() - 1;
+    }
+
+    virtual llvm::Value* getAlloc(int id) {
+        return allocas[id];
+    }
+
+    /* TODO: remove this function */
+    virtual bool doCustomReturn(MValue *value) {
+        return false;
     }
 
     Context(ContextStorage *storage):
@@ -154,6 +179,8 @@ struct Context {
     virtual ~Context() {
         // TODO
     };
+
+    std::vector<llvm::Value*> allocas;
 };
 
 struct SystemContext : Context {
@@ -244,6 +271,7 @@ class MValueAST {
 public:
     virtual ~MValueAST() {};
 
+    virtual void preCodegen(Context *ctx) {};
     virtual MValueType *calculateType(Context *ctx) = 0;
     virtual MValue* codegen(Context *ctx, MValueType *type = 0) = 0;
 
@@ -254,9 +282,7 @@ class VarExpr : public MValueAST {
 public:
     VarExpr(std::string str);
 
-    virtual MValueType* calculateType(Context *ctx) {
-        // TODO: calculateType
-    };
+    virtual MValueType* calculateType(Context *ctx);
     virtual MValue* codegen(Context *ctx, MValueType *type = 0);
     virtual std::string toString() const;
 
@@ -271,9 +297,7 @@ public:
         name(name)
     {}
 
-    virtual MValueType* calculateType(Context *ctx) {
-        // TODO: calculateType
-    };
+    virtual MValueType* calculateType(Context *ctx);
     virtual MValue* codegen(Context *ctx, MValueType *type = 0);
     virtual std::string toString() const { return val->toString() + "." + name; }
 
@@ -286,9 +310,7 @@ class SpawnExpr : public MValueAST {
 public:
     SpawnExpr(std::string str, TupleAST *spawnArgs);
 
-    virtual MValueType* calculateType(Context *ctx) {
-        // TODO: calculateType
-    };
+    virtual MValueType* calculateType(Context *ctx);
     virtual MValue* codegen(Context *ctx, MValueType *type = 0);
     virtual std::string toString() const;
 
@@ -353,14 +375,15 @@ public:
         args(args)
     {}
 
-    virtual MValueType* calculateType(Context *ctx) {
-        // TODO: calculateType
-    };
+    virtual void preCodegen(Context *ctx);
+    virtual MValueType* calculateType(Context *ctx);
     virtual MValue* codegen(Context *ctx, MValueType *type = 0);
     std::string toString() const;
 
 private:
+    int precodegenVarId = -1;
     MValueAST *val;
+    MValue *asyncCallResult;
     TupleAST *args;
 };
 

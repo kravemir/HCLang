@@ -42,6 +42,9 @@ void SendStmt::codegen(Context *ctx) {
         } else {
             std::vector<Value*> argsv;
             for( int i = 0; i < args->size(); i++ ) {
+                args->get(i)->preCodegen(ctx);
+            }
+            for( int i = 0; i < args->size(); i++ ) {
                 argsv.push_back(args->get(i)->codegen(ctx)->value());
             }
             Builder.CreateCall(printf_func,argsv);
@@ -74,6 +77,7 @@ void SendStmt::codegen(Context *ctx) {
             SlotType *slot_type = dynamic_cast<SlotType*>(ma->type);
 
             if(system_type) {
+                args->preCodegen(ctx);
                 MValue *v_args = args->codegen(ctx);
 
                 Function *finit = ctx->storage->module->getFunction("system_putMsg");
@@ -84,6 +88,7 @@ void SendStmt::codegen(Context *ctx) {
                 });
                 Builder.CreateCall(finit,aadices);
             } else {
+                args->preCodegen(ctx);
                 MValue *v_args = args->codegen(ctx);
 
                 ma->value()->dump();

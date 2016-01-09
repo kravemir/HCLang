@@ -60,7 +60,10 @@ struct TupleAST : MValueAST {
     TupleAST( MValueList *values, MValueMap *namedMValues );
 
     virtual MValueType* calculateType(Context *ctx);
+
+    virtual void preCodegen(Context *ctx) override;
     virtual MValue* codegen(Context *ctx, MValueType *type = 0);
+
     std::string toString() const;
 
     MValueAST* get(size_t idx) {
@@ -73,6 +76,9 @@ struct TupleAST : MValueAST {
 
     MValueList *values;
     MValueMap *namedMValues;
+
+private:
+    bool hasPrecodegen = false;
 };
 
 #endif // HCLANG_AST_TUPLE_H
