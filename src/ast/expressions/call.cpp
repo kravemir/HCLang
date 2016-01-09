@@ -101,7 +101,7 @@ MValue* CallExpr::codegen(Context *ctx, MValueType *type) {
     MValue *v = val->codegen(ctx);
     MValueType *ft = v->type;
     std::vector<Value *> argsV;
-    for (int i = 0; i < args->size(); i++) {
+    for (size_t i = 0; i < args->size(); i++) {
         auto a = args->get(i);
         argsV.push_back(a->codegen(ctx)->value());
     }

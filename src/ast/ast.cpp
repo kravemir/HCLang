@@ -151,7 +151,7 @@ void CondStmt::codegen(Context *ctx) {
     // Create blocks for the then and else cases.  Insert the 'then' block at the
     // end of the function.
     BasicBlock *MergeBB = BasicBlock::Create(getGlobalContext(), "ifcont");
-    for( int i = 0; i < stmts.size(); i++ ) {
+    for( size_t i = 0; i < stmts.size(); i++ ) {
         MValue *cond = stmts[i].first->codegen(ctx);
         BasicBlock *ThenBB = BasicBlock::Create(getGlobalContext(), "then", TheFunction);
         BasicBlock *ElseBB = BasicBlock::Create(getGlobalContext(), "else");
@@ -187,7 +187,7 @@ void CondStmt::codegen(Context *ctx) {
 }
 
 void CondStmt::collectAlloc(Context *ctx) {
-    for( int i = 0; i < stmts.size(); i++ )
+    for( size_t i = 0; i < stmts.size(); i++ )
         for( auto *s : *stmts[i].second )
             s->collectAlloc(ctx);
 
@@ -205,7 +205,7 @@ void FunctionDecl::codegen(Context *_ctx) {
     Context ctx (_ctx);
     std::vector<llvm::Type*> args;
     std::vector<MValueType*> types;
-    for( int i = 0; i < this->args->namedValues.size(); i++ ) {
+    for( size_t i = 0; i < this->args->namedValues.size(); i++ ) {
         auto v = this->args->namedValues[i];
         auto type = v.second->codegen(&ctx);
         args.push_back(type->llvmType());
@@ -229,7 +229,7 @@ void FunctionDecl::codegen(Context *_ctx) {
     Builder.SetInsertPoint(BB);
 
     Function::arg_iterator arg = F->arg_begin();
-    for( int i = 0; i < this->args->namedValues.size(); i++, arg++ ) {
+    for( size_t i = 0; i < this->args->namedValues.size(); i++, arg++ ) {
         auto v = this->args->namedValues[i];
         ctx.bindValue(v.first, new MValue({types[i],arg}));
     }
@@ -278,7 +278,7 @@ void MatchAssignStmt::codegen(Context *ctx) {
     Builder.SetInsertPoint(MergeBB);
 
     PHINode* phi = Builder.CreatePHI(Type::getInt8PtrTy(lctx),values.size(), "matchresult" );
-    for( int i = 0; i < valuesl.size(); i++ ) {
+    for( size_t i = 0; i < valuesl.size(); i++ ) {
         phi->addIncoming(valuesl[i],blocks[i]);
     }
     ctx->bindValue(target[0], new MValue{ 0, phi });

@@ -41,6 +41,8 @@ MValueType *SystemType::getChildType(std::string name) {
         }
     if(i != -1)
         return slotTypes[i];
+    assert(0);
+    return 0;
 }
 
 MValue* SystemType::getChild(MValue *src, std::string name) {
@@ -160,13 +162,6 @@ void SystemDecl::codegen(Context *_ctx) {
     for(Statement *s : *stmts)
         s->codegen(&ctx);
 
-    std::vector<llvm::Type*> aargs;
-    aargs.push_back(Type::getInt8PtrTy(getGlobalContext()));
-    aargs.push_back(Type::getInt32Ty(getGlobalContext()));
-    aargs.push_back(Type::getInt8PtrTy(getGlobalContext()));
-    FunctionType *FFT = FunctionType::get(
-                            Type::getInt8PtrTy(getGlobalContext()), aargs, false);
-
     Function *FF = codegen_msghandler(&ctx);
 
     GlobalVariable *vtable;
@@ -176,14 +171,14 @@ void SystemDecl::codegen(Context *_ctx) {
                                        ctx.storage->module->getTypeByName("struct.ConnectionVtable"),
                                        Constant::getNullValue(Type::getInt8PtrTy(getGlobalContext())),
                                        Constant::getNullValue(Type::getInt8PtrTy(getGlobalContext())),
-                                       0
+                                       nullptr
                                    );
         Constant *format_const = ConstantStruct::get(
                                      ctx.storage->module->getTypeByName("struct.SystemVtable"),
                                      contable_const,
                                      //Constant::getNullValue(Type::getInt8PtrTy(getGlobalContext())),
                                      FF,
-                                     0
+                                     nullptr
                                  );
         if(ctx.storage->module->getTypeByName("struct.ConnectionVtable") == 0) return;
         vtable = new GlobalVariable(

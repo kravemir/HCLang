@@ -41,10 +41,10 @@ void SendStmt::codegen(Context *ctx) {
             Builder.CreateCall(printf_func, val->value());
         } else {
             std::vector<Value*> argsv;
-            for( int i = 0; i < args->size(); i++ ) {
+            for( size_t i = 0; i < args->size(); i++ ) {
                 args->get(i)->preCodegen(ctx);
             }
-            for( int i = 0; i < args->size(); i++ ) {
+            for( size_t i = 0; i < args->size(); i++ ) {
                 argsv.push_back(args->get(i)->codegen(ctx)->value());
             }
             Builder.CreateCall(printf_func,argsv);
@@ -67,7 +67,7 @@ void SendStmt::codegen(Context *ctx) {
                     indices));
     } else {
         MValue *ma = ctx->getVariable(target[0]); // TODO
-        for(int i = 1; i < target.size(); i++ ) {
+        for(size_t i = 1; i < target.size(); i++ ) {
             ma = ma->type->getChild(ma,target[i]);
         }
         if(!ma) {

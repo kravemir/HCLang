@@ -83,7 +83,7 @@ void SlotDecl::codegen ( Context *_ctx ) {
 
     SlotContext ctx ( _ctx, this->type );
     ctx.bindValue ( "self", new MValue ( { ctx.storage->system, F->arg_begin() } ) );
-    for ( int i = 0; i < this->args->namedValues.size(); i++ ) {
+    for ( size_t i = 0; i < this->args->namedValues.size(); i++ ) {
         auto v = this->args->namedValues[i];
         std::vector<llvm::Value*> args ( {
             ConstantInt::get ( lctx,APInt ( ( unsigned ) 32, ( uint64_t ) 0 ) ),

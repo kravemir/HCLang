@@ -153,7 +153,7 @@ Statement* Parser::pathPrefixStatement(){
             TupleAST *call = tuple();
             expectConsume(Token::NEWLINE);
             MValueAST *val = new VarExpr(p[0]);
-            for(int i = 1; i < p.size(); i++)
+            for(size_t i = 1; i < p.size(); i++)
                 val = new GetChildAST(val,p[i]);
             return new ExprStmt(new CallExpr(val,call));
         }
@@ -183,11 +183,6 @@ Statement* Parser::letStatement() {
 
 Statement*  Parser::bindStatement(Path target) {
     MValueAST*val;
-    MTypeAST* letType = 0; 
-
-    if( tryConsume(Token::COLON) ) {
-        letType = typeDecl();
-    }
 
     if(!expectConsume(Token::ASSIGN)) return 0;
 

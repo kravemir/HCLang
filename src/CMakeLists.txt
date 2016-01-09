@@ -39,28 +39,46 @@ set ( HCLANG_SRCS
     ast/types/tuple.cpp
     ast/types/union.cpp
 
-    ast/statements/for.h
     ast/statements/for.cpp
-    ast/statements/var.h
     ast/statements/var.cpp
-    ast/statements/let.h
     ast/statements/let.cpp
-    ast/statements/send.h
     ast/statements/send.cpp
-    ast/statements/expr.h
     ast/statements/expr.cpp
-    ast/statements/return.h
     ast/statements/return.cpp
 
-    ast/expressions/binop.h
     ast/expressions/binop.cpp
-    ast/expressions/call.h
     ast/expressions/call.cpp
     ast/expressions/cond.cpp
+)
+
+set ( HCLANG_HEADERS
+    ast/ast.h
+    lexer.h
+    parser.h
+    base.h
+    printer.h
+
+    ast/declarations/system.h
+    ast/declarations/slot.h
+    ast/declarations/procedure.h
+
+    ast/types/array.h
+    ast/types/tuple.h
+    ast/types/union.h
+
+    ast/statements/for.h
+    ast/statements/var.h
+    ast/statements/let.h
+    ast/statements/send.h
+    ast/statements/expr.h
+    ast/statements/return.h
+
+    ast/expressions/binop.h
+    ast/expressions/call.h
     ast/expressions/cond.h
 )
 
-add_library( HCLang ${HCLANG_SRCS} )
+add_library( HCLang ${HCLANG_SRCS} ${HCLANG_HEADERS} )
 
 
 # AST codegen debug
