@@ -20,28 +20,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_AST_H
-#define HCLANG_AST_AST_H
+#ifndef HCLANG_AST_STMT_FOR_H
+#define HCLANG_AST_STMT_FOR_H
 
 #include "base.h"
 
-#include "array.h"
-#include "tuple.h"
-#include "union.h"
-#include "system.h"
+class ForStmt : public Statement {
+public:
+    ForStmt(std::string target_name, MValueAST *inval, StatementList *stmts):
+            target_name(target_name),
+            inval(inval),
+            stmts(stmts)
+    {}
 
-#include "slot.h"
-#include "procedure.h"
+    virtual void codegen(Context *ctx);
+    virtual void collectAlloc ( Context* ctx );
 
-#include "stmt_let.h"
-#include "stmt_send.h"
-#include "stmt_expr.h"
-#include "stmt_return.h"
-#include "stmt_for.h"
-#include "stmt_var.h"
+    virtual void print(Printer &p) const;
+private:
+    std::string target_name;
+    MValueAST *inval;
+    StatementList *stmts;
 
-#include "expr_binop.h"
-#include "expr_call.h"
-#include "expr_cond.h"
+    llvm::AllocaInst* iPtr = 0;
+};
 
-#endif // HCLANG_AST_AST_H
+#endif //HCLANG_AST_STMT_FOR_H

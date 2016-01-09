@@ -20,28 +20,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_AST_H
-#define HCLANG_AST_AST_H
+#ifndef HCLANG_AST_EXPR_COND_H
+#define HCLANG_AST_EXPR_COND_H
 
 #include "base.h"
 
-#include "array.h"
-#include "tuple.h"
-#include "union.h"
-#include "system.h"
+class CondExpr : public MValueAST {
+public:
+    CondExpr(MValueAST *cond, MValueAST *thenVal, MValueAST *elseVal):
+            cond(cond),
+            thenVal(thenVal),
+            elseVal(elseVal)
+    {}
 
-#include "slot.h"
-#include "procedure.h"
+    virtual MValueType* calculateType(Context *ctx);
+    virtual MValue* codegen(Context *ctx, MValueType *type = 0);
+    virtual std::string toString() const;
 
-#include "stmt_let.h"
-#include "stmt_send.h"
-#include "stmt_expr.h"
-#include "stmt_return.h"
-#include "stmt_for.h"
-#include "stmt_var.h"
+private:
+    MValueAST *cond, *thenVal, *elseVal;
+};
 
-#include "expr_binop.h"
-#include "expr_call.h"
-#include "expr_cond.h"
-
-#endif // HCLANG_AST_AST_H
+#endif //HCLANG_AST_EXPR_COND_H

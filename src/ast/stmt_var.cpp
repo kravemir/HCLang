@@ -20,28 +20,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_AST_H
-#define HCLANG_AST_AST_H
-
-#include "base.h"
-
-#include "array.h"
-#include "tuple.h"
-#include "union.h"
-#include "system.h"
-
-#include "slot.h"
-#include "procedure.h"
-
-#include "stmt_let.h"
-#include "stmt_send.h"
-#include "stmt_expr.h"
-#include "stmt_return.h"
-#include "stmt_for.h"
 #include "stmt_var.h"
 
-#include "expr_binop.h"
-#include "expr_call.h"
-#include "expr_cond.h"
+#include "system.h"
 
-#endif // HCLANG_AST_AST_H
+using namespace llvm;
+
+void VarDecl::codegen(Context *ctx) {
+    // TODO: QUICKFIX - don't compile as system decl
+    if(dynamic_cast<SystemContext*>(ctx) != 0) {
+        return;
+    }
+    assert(alloc);
+    MValue *v = val->codegen(ctx,typeVal);
+    Builder.CreateStore(v->value(), alloc);
+    ctx->bindValue(name, new MValue(v->type,alloc,true));
+}
+
+void VarDecl::collectAlloc(Context *ctx) {
+    if( type )
+        typeVal = type->codegen(ctx);
+    else
+        typeVal = val->calculateType(ctx);
+    alloc = Builder.CreateAlloca(typeVal->llvmType(), nullptr, "var." + name + ".alloca");
+}
+
+void VarDecl::collectSystemDecl(Context *ctx) const {
+    SystemType *s = ctx->storage->system;
+    s->variables.push_back(make_pair(name,type->codegen(ctx)));
+}

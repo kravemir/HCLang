@@ -20,28 +20,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_AST_H
-#define HCLANG_AST_AST_H
-
-#include "base.h"
-
-#include "array.h"
-#include "tuple.h"
-#include "union.h"
-#include "system.h"
-
-#include "slot.h"
-#include "procedure.h"
-
-#include "stmt_let.h"
-#include "stmt_send.h"
-#include "stmt_expr.h"
 #include "stmt_return.h"
-#include "stmt_for.h"
-#include "stmt_var.h"
 
-#include "expr_binop.h"
-#include "expr_call.h"
-#include "expr_cond.h"
+void ReturnStmt::collectAlloc(Context *ctx) {
+    // TODO, collect alloc
+}
 
-#endif // HCLANG_AST_AST_H
+void ReturnStmt::codegen(Context *ctx) {
+    MValue *value = val->codegen(ctx);
+    if(ctx->doCustomReturn(value)) return;
+    Builder.CreateRet(value->value());
+}
