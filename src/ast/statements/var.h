@@ -20,27 +20,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_STMT_EXPR_H
-#define HCLANG_AST_STMT_EXPR_H
+#ifndef HCLANG_AST_STMT_VAR_H
+#define HCLANG_AST_STMT_VAR_H
 
-#include "base.h"
+#include "ast/base.h"
 
-class ExprStmt : public Statement {
+class VarDecl : public Statement {
 public:
-    ExprStmt(MValueAST *value):
-        value(value)
-    {}
+    VarDecl(std::string name, MTypeAST *type, MValueAST *val);
 
     virtual void codegen(Context *ctx);
-    virtual void collectAlloc ( Context* ctx ) {
-        // TODO collect expr
-    }
+    virtual void collectSystemDecl(Context *ctx) const;
+    virtual void collectAlloc ( Context* ctx );
 
     virtual void print(Printer &p) const;
 
 private:
-    MValueAST *value;
+    std::string name;
+    MTypeAST *type;
+    MValueAST *val;
+
+    MValueType *typeVal;
+    llvm::AllocaInst *alloc = 0;
 };
 
-
-#endif // HCLANG_AST_STMT_EXPR_H
+#endif //HCLANG_AST_STMT_VAR_H

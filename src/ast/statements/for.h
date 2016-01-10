@@ -20,31 +20,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_STMT_LET_H
-#define HCLANG_AST_STMT_LET_H
+#ifndef HCLANG_AST_STMT_FOR_H
+#define HCLANG_AST_STMT_FOR_H
 
-#include "base.h"
+#include "ast/base.h"
 
-class LetStmt : public Statement {
+class ForStmt : public Statement {
 public:
-    LetStmt(Path target, MTypeAST *letType, MValueAST *value):
-        target(target),
-        letType(letType),
-        value(value)
+    ForStmt(std::string target_name, MValueAST *inval, StatementList *stmts):
+            target_name(target_name),
+            inval(inval),
+            stmts(stmts)
     {}
 
     virtual void codegen(Context *ctx);
-    virtual void collectAlloc ( Context* ctx ) {
-        // TODO collect alloc of value
-    }
+    virtual void collectAlloc ( Context* ctx );
 
     virtual void print(Printer &p) const;
-
 private:
-    Path target;
-    MTypeAST *letType;
-    MValueAST *value;
+    std::string target_name;
+    MValueAST *inval;
+    StatementList *stmts;
+
+    llvm::AllocaInst* iPtr = 0;
 };
 
-
-#endif // HCLANG_AST_STMT_LET_H
+#endif //HCLANG_AST_STMT_FOR_H

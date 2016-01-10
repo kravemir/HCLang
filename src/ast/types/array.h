@@ -20,44 +20,48 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_TUPLE_H
-#define HCLANG_AST_TUPLE_H
+#ifndef HCLANG_AST_ARRAY_H
+#define HCLANG_AST_ARRAY_H
 
-#include "base.h"
+#include "ast/base.h"
 
-struct TupleType : MValueType {
-    std::vector<MValueType*> values;
-    std::vector<std::pair<std::string,MValueType*>> namedValues;
-
+struct MArrayType : MValueType {
+    MValueType *elementType;
+    llvm::Type *type;
+    
+    MArrayType ( MValueType *elementType, llvm::Type *type):
+        elementType(elementType),
+        type(type) 
+    {
+        assert(elementType);
+        assert(type);
+    }
 
     virtual MValue* getChild(MValue *src, std::string name);
-    int getIndex(std::string name);
-    virtual MValue* createConstructor(Context *ctx);
-    
-    static TupleType *create( std::vector<std::pair<std::string,MValueType*>> namedValues, std::string name = "tuple");
-    
+    virtual MValue* getArrayChild(MValue *src, llvm::Value *index);
+    virtual llvm::Type* llvmType() const {
+        return type;
+    }
+
+    static MArrayType* create( MValueType *elementType );
+};
+
+struct MArrayTypeAST : MTypeAST {
+    MArrayTypeAST(MTypeAST* element):
+        element(element)
+    {
+        assert(element != 0);
+    }
+
+    virtual MValueType* codegen(Context *ctx);
+
 private:
-    TupleType() = delete;
-    TupleType( llvm::Type *_llvmType, std::vector<std::pair<std::string,MValueType*>> namedValues):
-        MValueType(_llvmType),
-        namedValues(namedValues)
-    {}
+    MTypeAST* element;
 };
 
-struct MTupleTypeAST : MTypeAST {
-    MTupleTypeAST(std::vector<MTypeAST*> types, std::vector<std::pair<std::string,MTypeAST*>> namedValues):
-        types(types),
-        namedValues(namedValues)
+struct ArrayAST : MValueAST {
+    ArrayAST( MValueList *values ): values(values)
     {}
-
-    TupleType* codegen(Context *ctx);
-
-    std::vector<MTypeAST*> types;
-    std::vector<std::pair<std::string,MTypeAST*>> namedValues;
-};
-
-struct TupleAST : MValueAST {
-    TupleAST( MValueList *values, MValueMap *namedMValues );
 
     virtual MValueType* calculateType(Context *ctx);
     virtual MValue* codegen(Context *ctx, MValueType *type = 0);
@@ -72,7 +76,6 @@ struct TupleAST : MValueAST {
     }
 
     MValueList *values;
-    MValueMap *namedMValues;
 };
 
-#endif // HCLANG_AST_TUPLE_H
+#endif // HCLANG_AST_ARRAY_H

@@ -20,41 +20,30 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_UNION_H
-#define HCLANG_AST_UNION_H
+#ifndef HCLANG_AST_STMT_LET_H
+#define HCLANG_AST_STMT_LET_H
 
-#include "base.h"
+#include "ast/base.h"
 
-struct MUnionType : MValueType {
-    MUnionType(std::vector<MValueType*> alternatives, int size):
-        alternatives(alternatives),
-        size(size)
-    {}
-
-
-    void add(MValueType* t) {}; // TODO
-    virtual llvm::Type* llvmType() const;
-
-    virtual std::pair<llvm::Value*,MValue*> matchCond(std::string targetName, MValue* src, Context *ctx);
-    virtual MValue* createCast(Context *ctx, MValue *src);
-
-private:
-    std::vector<MValueType*> alternatives;
-    int size;
-
-    llvm::Type *_llvmType = 0;
-};
-
-class MUnionTypeAST : public MTypeAST {
+class LetStmt : public Statement {
 public:
-    MUnionTypeAST(std::vector<MTypeAST*> values):
-        values(values)
+    LetStmt(Path target, MTypeAST *letType, MValueAST *value):
+        target(target),
+        letType(letType),
+        value(value)
     {}
 
-    virtual MValueType* codegen(Context *ctx);
+    virtual void codegen(Context *ctx);
+    virtual void collectAlloc ( Context* ctx );
+
+    virtual void print(Printer &p) const;
 
 private:
-    std::vector<MTypeAST*> values;
+    Path target;
+    MTypeAST *letType;
+    MValueAST *value;
+    int allocId;
 };
 
-#endif // HCLANG_AST_UNION_H
+
+#endif // HCLANG_AST_STMT_LET_H

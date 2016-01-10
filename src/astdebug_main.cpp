@@ -47,6 +47,7 @@
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/Support/SourceMgr.h>
 #include <vector>
+#include <unistd.h>
 
 #include "parser.h"
 #include "printer.h"
@@ -111,6 +112,9 @@ int main(int argc, char **argv)
     cout << "Statements " << list->size() << endl;
     for( Statement *s : *list )
         s->print(p);
+    std::cerr.flush();
+    std::cout.flush();
+    usleep(1000);
 
     llvm::LLVMContext &llvmContext = llvm::getGlobalContext();
     SMDiagnostic error;
@@ -177,6 +181,10 @@ int main(int argc, char **argv)
     
     TheExecutionEngine->finalizeObject();
 
+    std::cerr.flush();
+    std::cout.flush();
+
+    usleep(1000);
 
     // JIT the function, returning a function pointer.
     Function *LF = TheModule->getFunction("main");

@@ -148,11 +148,14 @@ Statement* Parser::pathPrefixStatement(){
         return bindStatement(p);
     case Token::EXCLAMATION_MARK:
         return sendStatement(p);
-    case Token::OPEN_PARENTHESIS:
+    case Token::OPEN_PARENTHESIS: // TODO: use atom function
         {
             TupleAST *call = tuple();
             expectConsume(Token::NEWLINE);
-            return new ExprStmt(new CallExpr(new VarExpr(p[0]),call));
+            MValueAST *val = new VarExpr(p[0]);
+            for(size_t i = 1; i < p.size(); i++)
+                val = new GetChildAST(val,p[i]);
+            return new ExprStmt(new CallExpr(val,call));
         }
     default:
         errorExpansion("Unexpected token at expasion of path prefix statement");
@@ -180,11 +183,6 @@ Statement* Parser::letStatement() {
 
 Statement*  Parser::bindStatement(Path target) {
     MValueAST*val;
-    MTypeAST* letType = 0; 
-
-    if( tryConsume(Token::COLON) ) {
-        letType = typeDecl();
-    }
 
     if(!expectConsume(Token::ASSIGN)) return 0;
 
@@ -356,7 +354,7 @@ SlotDecl*        Parser::slotDecl() {
             break;
     }
 
-    return new SlotDecl( name, args, stmts);
+    return new SlotDecl( name, args, type, stmts);
 }
 
 ProcedureDecl*        Parser::procedureDecl() {
@@ -595,7 +593,7 @@ SlotTypeAST* Parser::slotTypeDecl() {
     if(!expectConsume(Token::SLOT)) return 0;
     MTupleTypeAST *tuple = tupleTypeDecl();
     if(!tuple) return 0;
-    return new SlotTypeAST(tuple);
+    return new SlotTypeAST(tuple, 0); // TODO: parse Return type
 }
 
 MTypeAST* Parser::unionTypeDecl() {

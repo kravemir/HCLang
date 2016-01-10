@@ -20,60 +20,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_ARRAY_H
-#define HCLANG_AST_ARRAY_H
+#ifndef HCLANG_AST_EXPR_COND_H
+#define HCLANG_AST_EXPR_COND_H
 
-#include "base.h"
+#include "ast/base.h"
 
-struct MArrayType : MValueType {
-    MValueType *elementType;
-    llvm::Type *type;
-    
-    MArrayType ( MValueType *elementType, llvm::Type *type):
-        elementType(elementType),
-        type(type) 
-    {
-        assert(elementType);
-        assert(type);
-    }
-
-    virtual MValue* getChild(MValue *src, std::string name);
-    virtual MValue* getArrayChild(MValue *src, llvm::Value *index);
-    virtual llvm::Type* llvmType() const {
-        return type;
-    }
-};
-
-struct MArrayTypeAST : MTypeAST {
-    MArrayTypeAST(MTypeAST* element):
-        element(element)
-    {
-        assert(element != 0);
-    }
-
-    virtual MValueType* codegen(Context *ctx);
-
-private:
-    MTypeAST* element;
-};
-
-struct ArrayAST : MValueAST {
-    ArrayAST( MValueList *values ): values(values)
+class CondExpr : public MValueAST {
+public:
+    CondExpr(MValueAST *cond, MValueAST *thenVal, MValueAST *elseVal):
+            cond(cond),
+            thenVal(thenVal),
+            elseVal(elseVal)
     {}
 
     virtual MValueType* calculateType(Context *ctx);
     virtual MValue* codegen(Context *ctx, MValueType *type = 0);
-    std::string toString() const;
+    virtual std::string toString() const;
 
-    MValueAST* get(size_t idx) {
-        return (*values)[idx];
-    }
-
-    size_t size() const {
-        return values->size();
-    }
-
-    MValueList *values;
+private:
+    MValueAST *cond, *thenVal, *elseVal;
 };
 
-#endif // HCLANG_AST_ARRAY_H
+#endif //HCLANG_AST_EXPR_COND_H

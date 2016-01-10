@@ -20,28 +20,41 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_AST_H
-#define HCLANG_AST_AST_H
+#ifndef HCLANG_AST_UNION_H
+#define HCLANG_AST_UNION_H
 
-#include "base.h"
+#include "ast/base.h"
 
-#include "declarations/system.h"
-#include "declarations/slot.h"
-#include "declarations/procedure.h"
+struct MUnionType : MValueType {
+    MUnionType(std::vector<MValueType*> alternatives, int size):
+        alternatives(alternatives),
+        size(size)
+    {}
 
-#include "types/array.h"
-#include "types/tuple.h"
-#include "types/union.h"
 
-#include "statements/let.h"
-#include "statements/send.h"
-#include "statements/expr.h"
-#include "statements/return.h"
-#include "statements/for.h"
-#include "statements/var.h"
+    void add(MValueType* t) {}; // TODO
+    virtual llvm::Type* llvmType() const;
 
-#include "expressions/binop.h"
-#include "expressions/call.h"
-#include "expressions/cond.h"
+    virtual std::pair<llvm::Value*,MValue*> matchCond(std::string targetName, MValue* src, Context *ctx);
+    virtual MValue* createCast(Context *ctx, MValue *src);
 
-#endif // HCLANG_AST_AST_H
+private:
+    std::vector<MValueType*> alternatives;
+    int size;
+
+    llvm::Type *_llvmType = 0;
+};
+
+class MUnionTypeAST : public MTypeAST {
+public:
+    MUnionTypeAST(std::vector<MTypeAST*> values):
+        values(values)
+    {}
+
+    virtual MValueType* codegen(Context *ctx);
+
+private:
+    std::vector<MTypeAST*> values;
+};
+
+#endif // HCLANG_AST_UNION_H

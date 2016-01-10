@@ -20,56 +20,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_SLOT_H
-#define HCLANG_AST_SLOT_H
+#ifndef HCLANG_AST_EXPRBINOP_H
+#define HCLANG_AST_EXPRBINOP_H
 
-#include "base.h"
-#include "tuple.h"
+#include "ast/base.h"
 
-class SlotType : public MValueType {
+class BinaryOpAST : public MValueAST {
 public:
-    static SlotType* create ( Context *ctx, TupleType *argsType );
+    BinaryOpAST(Token::Type op, MValueAST *left, MValueAST *right);
+
+    virtual MValueType* calculateType(Context *ctx);
+    virtual MValue* codegen(Context *ctx, MValueType *type = 0);
+    virtual std::string toString() const;
 
 private:
-    SlotType ( llvm::Type* _llvmType, TupleType *argsTupleType ) :
-        MValueType ( _llvmType,false,0 ),
-        argsTupleType ( argsTupleType )
-    {}
-
-public:
-    TupleType* const argsTupleType;
+    Token::Type op;
+    MValueAST *left, *right;
 };
 
-class SlotTypeAST : public MTypeAST {
-public:
-    SlotTypeAST ( MTupleTypeAST *args ) :
-        args ( args )
-    {}
-
-    virtual MValueType* codegen ( Context* ctx );
-
-public:
-    MTupleTypeAST* const args;
-};
-
-class SlotDecl : public Statement {
-public:
-    SlotDecl ( std::string name, MTupleTypeAST *args, StatementList *list ) :
-        name ( name ),
-        args ( args ),
-        stmts ( list )
-    {}
-
-    virtual void codegen ( Context *ctx );
-
-    virtual void print ( Printer &p ) const;
-    virtual void collectSystemDecl ( Context *ctx ) const;
-    virtual void collectAlloc ( Context* ctx ) {};
-
-private:
-    std::string name;
-    MTupleTypeAST *args;
-    StatementList *stmts;
-};
-
-#endif // HCLANG_AST_SLOT_H
+#endif // HCLANG_AST_EXPRBINOP_H

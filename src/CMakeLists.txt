@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 3.0)
 
 project( HCLang )
 
@@ -20,7 +20,7 @@ llvm_map_components_to_libnames(llvm_libs core mcjit native irreader)
 
 # SOURCES
 
-set ( HCLANG_SRCS 
+set ( HCLANG_SRCS
     ast/ast.cpp
     ast/ast.print.cpp
     lexer.cpp
@@ -31,23 +31,54 @@ set ( HCLANG_SRCS
     stexecutor.cpp
     mtexecutor.cpp
 
-    ast/array.cpp
-    ast/tuple.cpp
-    ast/union.cpp
-    ast/system.cpp
+    ast/declarations/system.cpp
+    ast/declarations/slot.cpp
+    ast/declarations/procedure.cpp
 
-    ast/slot.cpp
-    ast/procedure.cpp
+    ast/types/array.cpp
+    ast/types/tuple.cpp
+    ast/types/union.cpp
 
-    ast/stmt_let.cpp
-    ast/stmt_send.cpp
-    ast/stmt_expr.cpp
+    ast/statements/for.cpp
+    ast/statements/var.cpp
+    ast/statements/let.cpp
+    ast/statements/send.cpp
+    ast/statements/expr.cpp
+    ast/statements/return.cpp
 
-    ast/expr_binop.cpp
+    ast/expressions/binop.cpp
+    ast/expressions/call.cpp
+    ast/expressions/cond.cpp
 )
 
+set ( HCLANG_HEADERS
+    ast/ast.h
+    lexer.h
+    parser.h
+    base.h
+    printer.h
 
-add_library( HCLang ${HCLANG_SRCS} )
+    ast/declarations/system.h
+    ast/declarations/slot.h
+    ast/declarations/procedure.h
+
+    ast/types/array.h
+    ast/types/tuple.h
+    ast/types/union.h
+
+    ast/statements/for.h
+    ast/statements/var.h
+    ast/statements/let.h
+    ast/statements/send.h
+    ast/statements/expr.h
+    ast/statements/return.h
+
+    ast/expressions/binop.h
+    ast/expressions/call.h
+    ast/expressions/cond.h
+)
+
+add_library( HCLang ${HCLANG_SRCS} ${HCLANG_HEADERS} )
 
 
 # AST codegen debug

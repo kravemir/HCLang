@@ -20,20 +20,50 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include "stmt_let.h"
+#ifndef HCLANG_AST_SYSTEM_H
+#define HCLANG_AST_SYSTEM_H
 
-#include "printer.h"
+#include "ast/base.h"
 
-void LetStmt::codegen(Context *ctx) {
-    MValueType *t = 0;
-    if( letType )
-        t = letType->codegen(ctx);
+class SlotType;
 
-    MValue *val;
-    val = value->codegen(ctx, t);
-    ctx->bindValue(target[0],val); // TODO
-}
+struct SystemType : MValueType {
+    int slotCount = 0;
+    std::map<std::string,int> slotIds;
+    std::vector<llvm::Function*> slots;
+    std::vector<SlotType*> slotTypes;
+    llvm::Function *fn_new;
 
-void LetStmt::print(Printer &p) const {
-    p.println( target[0] + " = " + value->toString()); // TODO
-}
+    std::vector<std::pair<std::string,MValueType*>> variables;
+
+
+    virtual llvm::Type* llvmType() const {
+        return _llvmType;
+    }
+    virtual MValue* getChild(MValue *src, std::string name);
+
+
+    virtual MValueType *getChildType(std::string name) override;
+
+    llvm::Type* _llvmType;
+};
+
+struct SystemDecl : Statement {
+    SystemDecl( std::string name, StatementList *list ):
+        name(name),
+        stmts(list)
+    {}
+
+    virtual void codegen(Context *ctx);
+    virtual void collectAlloc ( Context* ctx ) {};
+
+    virtual void print(Printer &p) const;
+
+private:
+    llvm::Function* codegen_msghandler(Context *ctx);
+
+    std::string name;
+    StatementList *stmts;
+};
+
+#endif // HCLANG_AST_SYSTEM_H

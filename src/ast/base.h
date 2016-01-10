@@ -59,6 +59,8 @@ struct MValueType {
 
     virtual ~MValueType() {};
 
+    virtual MValueType* getChildType(std::string name) { assert( 0 && "Type doesn't have children"); return 0; };
+
     virtual MValue* getChild(MValue *src, std::string name) { return 0; }
     virtual MValue* getArrayChild(MValue *src, llvm::Value *index) { return 0; }
 
@@ -108,6 +110,11 @@ struct ContextStorage {
     std::string prefix;
 };
 
+class Block {
+public:
+    virtual void createBr();
+};
+
 struct Context {
     ContextStorage *storage;
 
@@ -117,7 +124,7 @@ struct Context {
     std::map<std::string,MValue*> shadowed_variables;
     std::set<std::string> extra_variables;
 
-    void bindValue(std::string name, MValue* value) {
+    virtual void bindValue(std::string name, MValue* value) {
         MValue *old = getValue(name,false);
         if(old)
             shadowed_values[name] = old;
@@ -136,11 +143,29 @@ struct Context {
             return it->second;
         return 0;
     }
-    MValue* getValue(std::string name, bool fallToVariable = true) {
+    virtual MValue* getValue(std::string name, bool fallToVariable = true) {
         auto it = storage->values.find(name);
         if( it != storage->values.end() )
             return it->second;
         return 0;
+    }
+
+    virtual int addAwaitId(llvm::BasicBlock *b) {
+        return -1;
+    }
+
+    virtual int createAlloc(MValueType *type) {
+        allocas.push_back(Builder.CreateAlloca(type->llvmType()));
+        return allocas.size() - 1;
+    }
+
+    virtual llvm::Value* getAlloc(int id) {
+        return allocas[id];
+    }
+
+    /* TODO: remove this function */
+    virtual bool doCustomReturn(MValue *value) {
+        return false;
     }
 
     Context(ContextStorage *storage):
@@ -154,6 +179,8 @@ struct Context {
     virtual ~Context() {
         // TODO
     };
+
+    std::vector<llvm::Value*> allocas;
 };
 
 struct SystemContext : Context {
@@ -244,6 +271,7 @@ class MValueAST {
 public:
     virtual ~MValueAST() {};
 
+    virtual void preCodegen(Context *ctx) {};
     virtual MValueType *calculateType(Context *ctx) = 0;
     virtual MValue* codegen(Context *ctx, MValueType *type = 0) = 0;
 
@@ -254,9 +282,7 @@ class VarExpr : public MValueAST {
 public:
     VarExpr(std::string str);
 
-    virtual MValueType* calculateType(Context *ctx) {
-        // TODO: calculateType
-    };
+    virtual MValueType* calculateType(Context *ctx);
     virtual MValue* codegen(Context *ctx, MValueType *type = 0);
     virtual std::string toString() const;
 
@@ -271,9 +297,7 @@ public:
         name(name)
     {}
 
-    virtual MValueType* calculateType(Context *ctx) {
-        // TODO: calculateType
-    };
+    virtual MValueType* calculateType(Context *ctx);
     virtual MValue* codegen(Context *ctx, MValueType *type = 0);
     virtual std::string toString() const { return val->toString() + "." + name; }
 
@@ -286,9 +310,7 @@ class SpawnExpr : public MValueAST {
 public:
     SpawnExpr(std::string str, TupleAST *spawnArgs);
 
-    virtual MValueType* calculateType(Context *ctx) {
-        // TODO: calculateType
-    };
+    virtual MValueType* calculateType(Context *ctx);
     virtual MValue* codegen(Context *ctx, MValueType *type = 0);
     virtual std::string toString() const;
 
@@ -324,45 +346,9 @@ private:
     std::string val;
 };
 
-class CondExpr : public MValueAST {
-public:
-    CondExpr(MValueAST *cond, MValueAST *thenVal, MValueAST *elseVal):
-        cond(cond),
-        thenVal(thenVal),
-        elseVal(elseVal)
-    {}
-
-    virtual MValueType* calculateType(Context *ctx) {
-        // TODO: calculateType
-    };
-    virtual MValue* codegen(Context *ctx, MValueType *type = 0);
-    virtual std::string toString() const;
-
-private:
-    MValueAST *cond, *thenVal, *elseVal;
-};
-
 typedef std::vector<MValueAST*> MValueList;
 typedef std::map<std::string,MValueAST*> MValueMap;
 
-
-class CallExpr : public MValueAST {
-public:
-    CallExpr( MValueAST *val, TupleAST *args ):
-        val(val),
-        args(args)
-    {}
-
-    virtual MValueType* calculateType(Context *ctx) {
-        // TODO: calculateType
-    };
-    virtual MValue* codegen(Context *ctx, MValueType *type = 0);
-    std::string toString() const;
-
-private:
-    MValueAST *val;
-    TupleAST *args;
-};
 
 class Statement;
 struct StatementList : std::vector<Statement*> {
@@ -413,25 +399,6 @@ private:
     MTupleTypeAST *args;
     StatementList *stmts;
     MTypeAST *retType;
-};
-
-class VarDecl : public Statement {
-public:
-    VarDecl(std::string name, MTypeAST *type, MValueAST *val);
-
-    virtual void codegen(Context *ctx);
-    virtual void collectSystemDecl(Context *ctx) const;
-    virtual void collectAlloc ( Context* ctx );
-
-    virtual void print(Printer &p) const;
-
-private:
-    std::string name;
-    MTypeAST *type;
-    MValueAST *val;
-
-    MValueType *typeVal;
-    llvm::AllocaInst *alloc = 0;
 };
 
 class ImportStmt : public Statement {
@@ -501,40 +468,6 @@ public:
 private:
     CondStmtList stmts;
     StatementList *elStmt;
-};
-
-class ReturnStmt : public Statement {
-public:
-    ReturnStmt(MValueAST *val);
-
-    virtual void codegen(Context *ctx);
-    virtual void collectAlloc ( Context* ctx ) {
-        /* TODO collect alloc of value */
-    }
-
-    virtual void print(Printer &p) const;
-private:
-    MValueAST *val;
-};
-
-class ForStmt : public Statement {
-public:
-    ForStmt(std::string target_name, MValueAST *inval, StatementList *stmts):
-        target_name(target_name),
-        inval(inval),
-        stmts(stmts)
-    {}
-
-    virtual void codegen(Context *ctx);
-    virtual void collectAlloc ( Context* ctx );
-
-    virtual void print(Printer &p) const;
-private:
-    std::string target_name;
-    MValueAST *inval;
-    StatementList *stmts;
-
-    llvm::AllocaInst* iPtr = 0;
 };
 
 

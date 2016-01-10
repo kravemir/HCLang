@@ -20,24 +20,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_STMTSEND_H
-#define HCLANG_AST_STMTSEND_H
+#include "return.h"
 
-#include "base.h"
+void ReturnStmt::collectAlloc(Context *ctx) {
+    // TODO, collect alloc
+}
 
-class SendStmt : public Statement {
-public:
-    SendStmt(Path target, std::string msg, TupleAST *args);
-
-    virtual void codegen(Context *ctx);
-    virtual void collectAlloc ( Context* ctx );
-
-    virtual void print(Printer &p) const;
-private:
-    Path target;
-    std::string msg;
-    TupleAST *args;
-};
-
-
-#endif // HCLANG_AST_STMTSEND_H
+void ReturnStmt::codegen(Context *ctx) {
+    MValue *value = val->codegen(ctx);
+    if(ctx->doCustomReturn(value)) return;
+    Builder.CreateRet(value->value());
+}

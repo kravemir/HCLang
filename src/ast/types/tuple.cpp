@@ -73,7 +73,7 @@ MValue* TupleType::createConstructor(Context *ctx) {
         );
 
     auto arg = F->arg_begin();
-    for( int i = 0; i < namedValues.size(); i++ ) {
+    for( size_t i = 0; i < namedValues.size(); i++ ) {
         auto v = namedValues[i];
         Value *valPtr = Builder.CreateGEP(
             //v.second->llvmType(),
@@ -91,7 +91,7 @@ MValue* TupleType::createConstructor(Context *ctx) {
     return new MValue({ft,F});
 }
 MValue* TupleType::getChild(MValue *src, std::string name) { 
-    int i = 0;
+    size_t i = 0;
     for(; i < namedValues.size(); i++ )
         if( namedValues[i].first == name) break;
     Value *valPtr = Builder.CreateGEP(src->value(),{
@@ -114,12 +114,17 @@ TupleType* MTupleTypeAST::codegen(Context *ctx) {
 
 MValueType* TupleAST::calculateType(Context *ctx) {
     // TODO: calculateType
+    assert(0);
+    return 0;
 }
 
 MValue* TupleAST::codegen(Context *ctx, MValueType *type) {
     LLVMContext &lctx = getGlobalContext();
-    Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(lctx));
 
+    if(!hasPrecodegen) {
+        std::cerr << "TODO, tuple: has not precodegen\n";
+        preCodegen(ctx);
+    }
 
     std::vector<Value*> values;
     std::vector<Type*> types;
@@ -130,30 +135,56 @@ MValue* TupleAST::codegen(Context *ctx, MValueType *type) {
         types.push_back(v->type->llvmType());
         namedValues.push_back(std::make_pair("",v->type));
     }
-    TupleType *ttt = TupleType::create(namedValues);
-    StructType *st = StructType::create(lctx, types, "tuple");
-    std::vector<llvm::Constant*> indices({
-            ConstantInt::get(lctx, APInt((unsigned)32,(uint64_t)1))
-    });
-    PointerType *stPtr = PointerType::get(st,0);
-    Value *sizeptr = ConstantExpr::getGetElementPtr(
-            PointerType::get(st,0),
-            Constant::getNullValue(PointerType::get(st,0)),
-            indices
+    if(type == 0) {
+        TupleType *ttt = TupleType::create(namedValues);
+        StructType *st = StructType::create(lctx, types, "tuple");
+        std::vector<llvm::Constant *> indices({
+                                                      ConstantInt::get(lctx, APInt((unsigned) 32, (uint64_t) 1))
+                                              });
+        PointerType *stPtr = PointerType::get(st, 0);
+        Value *sizeptr = ConstantExpr::getGetElementPtr(
+                PointerType::get(st, 0),
+                Constant::getNullValue(PointerType::get(st, 0)),
+                indices
         );
-    Value *size = Builder.CreatePtrToInt(sizeptr, Type::getInt64Ty(lctx));
-    //Value *size = ConstantInt::get(lctx, APInt((unsigned)64,(uint64_t)32));
-    Function *fmalloc = ctx->storage->module->getFunction("malloc");
-    std::vector<Value *> fmalloc_args( {size} );
-    Value *call = Builder.CreateCall(fmalloc,fmalloc_args, "tuple_alloc");
-    Value *a = Builder.CreateBitCast(call, stPtr, "tuple");
-    for( int i = 0; i < values.size(); i++ ) {
-        Value *valPtr = Builder.CreateGEP( a, {
-            ConstantInt::get(lctx,APInt(32,(uint64_t)0)),
-            ConstantInt::get(lctx,APInt(32,(uint64_t)i))
-        });
-        Builder.CreateStore(values[i],valPtr);
+        Value *size = Builder.CreatePtrToInt(sizeptr, Type::getInt64Ty(lctx));
+        //Value *size = ConstantInt::get(lctx, APInt((unsigned)64,(uint64_t)32));
+        Function *fmalloc = ctx->storage->module->getFunction("malloc");
+        std::vector<Value *> fmalloc_args({size});
+        Value *call = Builder.CreateCall(fmalloc, fmalloc_args, "tuple_alloc");
+        Value *a = Builder.CreateBitCast(call, stPtr, "tuple");
+        for (size_t i = 0; i < values.size(); i++) {
+            Value *valPtr = Builder.CreateGEP(a, {
+                    ConstantInt::get(lctx, APInt(32, (uint64_t) 0)),
+                    ConstantInt::get(lctx, APInt(32, (uint64_t) i))
+            });
+            Builder.CreateStore(values[i], valPtr);
+        }
+        return new MValue({ttt,a});
+    } else {
+        TupleType *tt = dynamic_cast<TupleType*>(type);
+        int size = ctx->storage->module->getDataLayout().getTypeAllocSize(
+                ((PointerType*)tt->llvmType())->getElementType()
+        );
+        std::vector<Value *> fmalloc_args({ConstantInt::get(lctx,APInt(64,(uint64_t)size))});
+        Function *fmalloc = ctx->storage->module->getFunction("malloc");
+        Value *call = Builder.CreateCall(fmalloc, fmalloc_args, "tuple_alloc");
+        Value *a = Builder.CreateBitCast(call, tt->llvmType(), "tuple");
+        for (size_t i = 0; i < values.size(); i++) {
+            Value *valPtr = Builder.CreateGEP(a, {
+                    ConstantInt::get(lctx, APInt(32, (uint64_t) 0)),
+                    ConstantInt::get(lctx, APInt(32, (uint64_t) i))
+            });
+            Builder.CreateStore(values[i], valPtr);
+        }
+        return new MValue({tt,a});
     }
 
-    return new MValue({ttt,a});
+}
+
+void TupleAST::preCodegen(Context *ctx) {
+    for(MValueAST *v : *values) {
+        v->preCodegen(ctx);
+    }
+    hasPrecodegen = true;
 }

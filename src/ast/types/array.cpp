@@ -24,7 +24,8 @@
 
 using namespace llvm;
 
-MValue* MArrayType::getChild(MValue *src, std::string name) { 
+MValue* MArrayType::getChild(MValue *src, std::string name) {
+    src->value()->dump();
     Value * val = Builder.CreateLoad(
         Builder.CreateGEP(
             //Type::getInt64Ty(lctx),
@@ -52,21 +53,28 @@ MValue* MArrayType::getArrayChild(MValue *src, llvm::Value *idx) {
     return new MValue(elementType, val); 
 }
 
+
+MArrayType *MArrayType::create(MValueType *elementType) {
+    return new MArrayType(
+            elementType,
+            PointerType::getUnqual(
+                StructType::get(lctx,{
+                        Type::getInt64Ty(lctx),
+                        ArrayType::get(elementType->llvmType(), 1)
+                })
+            )
+    );
+}
+
 MValueType* MArrayTypeAST::codegen(Context *ctx) {
     MValueType *elementType = element->codegen(ctx);
-    return new MArrayType(
-        elementType,
-        StructType::get(lctx,{
-            Type::getInt64Ty(lctx),
-            ArrayType::get(elementType->llvmType(), 1)
-        })
-    );
+    return MArrayType::create(elementType);
 }
 
 #include <cstdlib>
 
 MValueType* ArrayAST::calculateType(Context* ctx) {
-    // TODO: calculateType
+    return MArrayType::create((*this->values)[0]->calculateType(ctx));
 }
 
 MValue* ArrayAST::codegen(Context *ctx, MValueType *type) {
@@ -78,7 +86,6 @@ MValue* ArrayAST::codegen(Context *ctx, MValueType *type) {
     }
 
     LLVMContext &lctx = getGlobalContext();
-    Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(lctx));
 
     std::vector<Value*> values;
     std::vector<MValueType*> types;
@@ -116,7 +123,7 @@ MValue* ArrayAST::codegen(Context *ctx, MValueType *type) {
         )
     );
 
-    for( int i = 0; i < values.size(); i++ ) {
+    for( size_t i = 0; i < values.size(); i++ ) {
         Value *valPtr = Builder.CreateGEP(
             a,
             std::vector<llvm::Value*>({

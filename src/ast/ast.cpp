@@ -30,34 +30,31 @@ using namespace llvm;
 IRBuilder<> Builder(getGlobalContext());
 LLVMContext &lctx = getGlobalContext();
 
+MValueType* GetChildAST::calculateType(Context *ctx) {
+    MValueType *t = val->calculateType(ctx);
+    assert(t);
+    return t->getChildType(name);
+};
 MValue* GetChildAST::codegen(Context *ctx, MValueType *type) {
     MValue *target = val->codegen(ctx);
     MValue *child = target->getChild(name);
     assert(child);
     return child;
 }
+MValueType* VarExpr::calculateType(Context *ctx) {
+    MValue *val = ctx->getValue(str);
+    assert(val);
+    return val->type;
+};
 MValue* VarExpr::codegen(Context *ctx, MValueType *type) {
     MValue *v = ctx->getValue(str); // TODO
     assert(v);
     return v;
 }
-MValue* CallExpr::codegen(Context *ctx, MValueType *type) {
-    MValue *v = val->codegen(ctx);
-    MValueType *ft = v->type;
-    if( !ft->callable ) {
-        std::cerr << "Can't use as function\n" << std::endl;
-    }
-    std::vector<Value *> argsV;
-    for(int i = 0; i < args->size(); i++) {
-        auto a = args->get(i);
-        argsV.push_back(a->codegen(ctx)->value());
-    }
-
-    MValue * val = new MValue({ft->callReturnType(),Builder.CreateCall(v->value(), argsV, "calltmp")});
-    if( type )
-        return type->createCast(ctx,val);
-    return val;
-
+MValueType* SpawnExpr::calculateType(Context *ctx) {
+    MValue* v = ctx->getValue(name);
+    assert(v);
+    return v->type;
 }
 MValue* SpawnExpr::codegen(Context *ctx, MValueType *type) {
     MValue* v = ctx->getValue(name);
@@ -135,30 +132,6 @@ void BindStmt::codegen(Context *ctx) {
 }
 
 
-void VarDecl::codegen(Context *ctx) {
-    // TODO: QUICKFIX - don't compile as system decl
-    if(dynamic_cast<SystemContext*>(ctx) != 0) {
-        return;
-    }
-    assert(alloc);
-    MValue *v = val->codegen(ctx,typeVal);
-    Builder.CreateStore(v->value(), alloc);
-    ctx->bindValue(name, new MValue(v->type,alloc,true));
-}
-
-void VarDecl::collectAlloc(Context *ctx) {
-    if( type )
-        typeVal = type->codegen(ctx);
-    else
-        typeVal = val->calculateType(ctx);
-    alloc = Builder.CreateAlloca(typeVal->llvmType(), nullptr, "var." + name + ".alloca");
-}
-
-void VarDecl::collectSystemDecl(Context *ctx) const {
-    SystemType *s = ctx->storage->system;
-    s->variables.push_back(make_pair(name,type->codegen(ctx)));
-}
-
 Value* MValue::value() {
     if(variable)
         return Builder.CreateLoad(_value);
@@ -178,7 +151,7 @@ void CondStmt::codegen(Context *ctx) {
     // Create blocks for the then and else cases.  Insert the 'then' block at the
     // end of the function.
     BasicBlock *MergeBB = BasicBlock::Create(getGlobalContext(), "ifcont");
-    for( int i = 0; i < stmts.size(); i++ ) {
+    for( size_t i = 0; i < stmts.size(); i++ ) {
         MValue *cond = stmts[i].first->codegen(ctx);
         BasicBlock *ThenBB = BasicBlock::Create(getGlobalContext(), "then", TheFunction);
         BasicBlock *ElseBB = BasicBlock::Create(getGlobalContext(), "else");
@@ -214,7 +187,7 @@ void CondStmt::codegen(Context *ctx) {
 }
 
 void CondStmt::collectAlloc(Context *ctx) {
-    for( int i = 0; i < stmts.size(); i++ )
+    for( size_t i = 0; i < stmts.size(); i++ )
         for( auto *s : *stmts[i].second )
             s->collectAlloc(ctx);
 
@@ -223,51 +196,6 @@ void CondStmt::collectAlloc(Context *ctx) {
             s->collectAlloc(ctx);
 }
 
-void ForStmt::codegen(Context *ctx) {
-    Function *TheFunction = Builder.GetInsertBlock()->getParent();
-
-    // Create blocks for the then and else cases.  Insert the 'then' block at the
-    // end of the function.
-    BasicBlock *condBB = BasicBlock::Create(getGlobalContext(), "cond");
-    BasicBlock *forBB = BasicBlock::Create(getGlobalContext(), "for");
-    BasicBlock *endBB = BasicBlock::Create(getGlobalContext(), "endfor");
-
-    assert( iPtr && "Probably collectAlloc wasn't called" );
-    Builder.CreateStore( ConstantInt::get(lctx,APInt((unsigned)64,(uint64_t)0)), iPtr);
-    MValue *val = this->inval->codegen(ctx);
-    Builder.CreateBr(condBB);
-
-
-    TheFunction->getBasicBlockList().push_back(condBB);
-    Builder.SetInsertPoint(condBB);
-    Value *cond = Builder.CreateICmpULT( Builder.CreateLoad(iPtr), val->getChild("size")->value());
-    Builder.CreateCondBr(cond, forBB, endBB);
-
-    TheFunction->getBasicBlockList().push_back(forBB);
-    Builder.SetInsertPoint(forBB);
-    ctx->bindValue(target_name, val->type->getArrayChild(val,Builder.CreateLoad(iPtr)));
-    for( auto *s : *stmts )
-        s->codegen(ctx);
-    Builder.CreateStore(
-            Builder.CreateAdd(Builder.CreateLoad(iPtr),ConstantInt::get(lctx,APInt((unsigned)64,(uint64_t)1))),
-            iPtr
-        );
-    Builder.CreateBr(condBB);
-    TheFunction->getBasicBlockList().push_back(endBB);
-    Builder.SetInsertPoint(endBB);
-
-}
-
-void ForStmt::collectAlloc ( Context* ctx ) {
-    iPtr = Builder.CreateAlloca(Type::getInt64Ty(lctx),0,"for.i.alloca");
-    for( auto *s : *stmts )
-        s->collectAlloc(ctx);
-}
-
-void ReturnStmt::codegen(Context *ctx) {
-    MValue *value = val->codegen(ctx);
-    Builder.CreateRet(value->value());
-}
 void TypeDecl::codegen(Context *ctx) {
     auto t = type->codegen(ctx);
     ctx->storage->types[name] = t;
@@ -277,7 +205,7 @@ void FunctionDecl::codegen(Context *_ctx) {
     Context ctx (_ctx);
     std::vector<llvm::Type*> args;
     std::vector<MValueType*> types;
-    for( int i = 0; i < this->args->namedValues.size(); i++ ) {
+    for( size_t i = 0; i < this->args->namedValues.size(); i++ ) {
         auto v = this->args->namedValues[i];
         auto type = v.second->codegen(&ctx);
         args.push_back(type->llvmType());
@@ -301,55 +229,13 @@ void FunctionDecl::codegen(Context *_ctx) {
     Builder.SetInsertPoint(BB);
 
     Function::arg_iterator arg = F->arg_begin();
-    for( int i = 0; i < this->args->namedValues.size(); i++, arg++ ) {
+    for( size_t i = 0; i < this->args->namedValues.size(); i++, arg++ ) {
         auto v = this->args->namedValues[i];
         ctx.bindValue(v.first, new MValue({types[i],arg}));
     }
 
     for(Statement *stmt : *stmts)
         stmt->codegen(&ctx);
-}
-MValue* CondExpr::codegen(Context *ctx, MValueType *type) {
-    Value *CondV = cond->codegen(ctx)->value();
-
-    Function *TheFunction = Builder.GetInsertBlock()->getParent();
-
-    // Create blocks for the then and else cases.  Insert the 'then' block at the
-    // end of the function.
-    BasicBlock *ThenBB = BasicBlock::Create(getGlobalContext(), "then", TheFunction);
-    BasicBlock *ElseBB = BasicBlock::Create(getGlobalContext(), "else");
-    BasicBlock *MergeBB = BasicBlock::Create(getGlobalContext(), "ifcont");
-
-    Builder.CreateCondBr(CondV, ThenBB, ElseBB);
-
-    // Emit then value.
-    Builder.SetInsertPoint(ThenBB);
-    MValue *MThenV = thenVal->codegen(ctx);
-    Value *ThenV = MThenV->value();
-    Builder.CreateBr(MergeBB);
-
-    // Codegen of 'Then' can change the current block, update ThenBB for the PHI.
-    ThenBB = Builder.GetInsertBlock();
-
-    // Emit else block.
-    TheFunction->getBasicBlockList().push_back(ElseBB);
-    Builder.SetInsertPoint(ElseBB);
-
-    Value *ElseV = elseVal->codegen(ctx)->value();
-
-    Builder.CreateBr(MergeBB);
-    // Codegen of 'Else' can change the current block, update ElseBB for the PHI.
-    ElseBB = Builder.GetInsertBlock();
-
-    // Emit merge block.
-    TheFunction->getBasicBlockList().push_back(MergeBB);
-    Builder.SetInsertPoint(MergeBB);
-    PHINode *PN =
-        Builder.CreatePHI(MThenV->type->llvmType(), 2, "iftmp");
-
-    PN->addIncoming(ThenV, ThenBB);
-    PN->addIncoming(ElseV, ElseBB);
-    return new MValue({MThenV->type,PN});
 }
 void MatchAssignStmt::codegen(Context *ctx) {
     Function *TheFunction = Builder.GetInsertBlock()->getParent();
@@ -392,7 +278,7 @@ void MatchAssignStmt::codegen(Context *ctx) {
     Builder.SetInsertPoint(MergeBB);
 
     PHINode* phi = Builder.CreatePHI(Type::getInt8PtrTy(lctx),values.size(), "matchresult" );
-    for( int i = 0; i < valuesl.size(); i++ ) {
+    for( size_t i = 0; i < valuesl.size(); i++ ) {
         phi->addIncoming(valuesl[i],blocks[i]);
     }
     ctx->bindValue(target[0], new MValue{ 0, phi });

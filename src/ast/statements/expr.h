@@ -20,22 +20,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_EXPRBINOP_H
-#define HCLANG_AST_EXPRBINOP_H
+#ifndef HCLANG_AST_STMT_EXPR_H
+#define HCLANG_AST_STMT_EXPR_H
 
-#include "base.h"
+#include "ast/base.h"
 
-class BinaryOpAST : public MValueAST {
+class ExprStmt : public Statement {
 public:
-    BinaryOpAST(Token::Type op, MValueAST *left, MValueAST *right);
+    ExprStmt(MValueAST *value):
+        value(value)
+    {}
 
-    virtual MValueType* calculateType(Context *ctx);
-    virtual MValue* codegen(Context *ctx, MValueType *type = 0);
-    virtual std::string toString() const;
+    virtual void codegen(Context *ctx);
+    virtual void collectAlloc ( Context* ctx ) {
+        // TODO collect expr
+    }
+
+    virtual void print(Printer &p) const;
 
 private:
-    Token::Type op;
-    MValueAST *left, *right;
+    MValueAST *value;
 };
 
-#endif // HCLANG_AST_EXPRBINOP_H
+
+#endif // HCLANG_AST_STMT_EXPR_H
