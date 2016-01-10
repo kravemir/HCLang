@@ -204,3 +204,49 @@ pre {
         }
     }
 }
+
+/**
+ * Styles
+ */
+
+body {
+    /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#f1ffe3+0,f9ffed+10,fffdff+25,ffffff+50,fffdff+75,f9ffed+90,f1ffe3+100 */
+    background: #f1ffe3; /* Old browsers */
+    background: -moz-linear-gradient(left, #f1ffe3 0%, #f9ffed 10%, #fffdff 25%, #ffffff 50%, #fffdff 75%, #f9ffed 90%, #f1ffe3 100%); /* FF3.6-15 */
+    background: -webkit-linear-gradient(left, #f1ffe3 0%,#f9ffed 10%,#fffdff 25%,#ffffff 50%,#fffdff 75%,#f9ffed 90%,#f1ffe3 100%); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to right, #f1ffe3 0%,#f9ffed 10%,#fffdff 25%,#ffffff 50%,#fffdff 75%,#f9ffed 90%,#f1ffe3 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f1ffe3', endColorstr='#f1ffe3',GradientType=1 ); /* IE6-9 */
+}
+
+table.styled-table {
+    border-spacing: 0;
+    border: solid 1px gray;
+    border-radius: 0.5em;
+    overflow: hidden;
+    font-size: 0.9em;
+    margin-bottom: 1em;
+
+    th {
+        background: #EAEAFF;
+    }
+    th, td {
+        padding: 0.2em 0.47em;
+    }
+}
+
+table.hower-row {
+    tr:hover td {
+        background: #FFFFCA;
+    }
+}
+
+.centered {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.green-strong {
+    strong {
+        color: green;
+    }
+}
