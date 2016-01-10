@@ -24,15 +24,16 @@
 #ifndef HCLANG_BASE_H
 #define HCLANG_BASE_H
 
-
-#define MY_INLINE
-
 #ifndef EXPORTLL
 #include <stdlib.h>
 #include <stdio.h>
+
+#ifndef MY_INLINE
 #define MY_INLINE inline
+#endif
 #else
 int printf(const char * restrict format, ... );
+#define MY_INLINE
 #endif
 
 #ifdef __cplusplus

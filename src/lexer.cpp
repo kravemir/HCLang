@@ -415,7 +415,6 @@ std::vector<Token> lexerBuf(const char *data, int len)
 {
     State state;
     std::vector<Token> tokens;
-    int i = 0;
     const char *end = data + len;
     const char *prev = data - 1;
     while(tokens.empty() || tokens.back().type != Token::EOI) {
@@ -448,7 +447,7 @@ std::vector<Token> lexerFile(const char *fname)
     fclose(f);
     data[fsize] = 0;
 
-    fprintf(stderr,"%d\n",fsize);
+    fprintf(stderr,"%ld\n",fsize);
 
     std::vector<Token> tokens = lexerBuf(data,fsize);
 

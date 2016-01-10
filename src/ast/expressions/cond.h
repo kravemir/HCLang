@@ -20,28 +20,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include "stmt_let.h"
+#ifndef HCLANG_AST_EXPR_COND_H
+#define HCLANG_AST_EXPR_COND_H
 
-#include "printer.h"
+#include "ast/base.h"
 
-void LetStmt::codegen(Context *ctx) {
-    MValueType *t = 0;
-    if( letType )
-        t = letType->codegen(ctx);
+class CondExpr : public MValueAST {
+public:
+    CondExpr(MValueAST *cond, MValueAST *thenVal, MValueAST *elseVal):
+            cond(cond),
+            thenVal(thenVal),
+            elseVal(elseVal)
+    {}
 
-    llvm::Value* alloca = ctx->getAlloc(this->allocId);
-    MValue *val;
-    val = value->codegen(ctx, t);
-    Builder.CreateStore(val->value(), alloca);
-    ctx->bindValue(target[0], new MValue(val->type,alloca,true)); // TODO
-}
+    virtual MValueType* calculateType(Context *ctx);
+    virtual MValue* codegen(Context *ctx, MValueType *type = 0);
+    virtual std::string toString() const;
 
-void LetStmt::collectAlloc(Context *ctx) {
-    MValueType *t = letType ? letType->codegen(ctx) : value->calculateType(ctx);
-    assert(t);
-    this->allocId = ctx->createAlloc(t);
-}
+private:
+    MValueAST *cond, *thenVal, *elseVal;
+};
 
-void LetStmt::print(Printer &p) const {
-    p.println( target[0] + " = " + value->toString()); // TODO
-}
+#endif //HCLANG_AST_EXPR_COND_H

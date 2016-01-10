@@ -20,13 +20,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include "stmt_send.h"
+#include "send.h"
 
 using namespace llvm;
 
-#include "tuple.h"
-#include "system.h"
-#include "slot.h"
+#include "ast/types/tuple.h"
+#include "ast/declarations/system.h"
+#include "ast/declarations/slot.h"
 
 #include "llvm/ADT/ArrayRef.h"
 
@@ -41,10 +41,10 @@ void SendStmt::codegen(Context *ctx) {
             Builder.CreateCall(printf_func, val->value());
         } else {
             std::vector<Value*> argsv;
-            for( int i = 0; i < args->size(); i++ ) {
+            for( size_t i = 0; i < args->size(); i++ ) {
                 args->get(i)->preCodegen(ctx);
             }
-            for( int i = 0; i < args->size(); i++ ) {
+            for( size_t i = 0; i < args->size(); i++ ) {
                 argsv.push_back(args->get(i)->codegen(ctx)->value());
             }
             Builder.CreateCall(printf_func,argsv);
@@ -67,7 +67,7 @@ void SendStmt::codegen(Context *ctx) {
                     indices));
     } else {
         MValue *ma = ctx->getVariable(target[0]); // TODO
-        for(int i = 1; i < target.size(); i++ ) {
+        for(size_t i = 1; i < target.size(); i++ ) {
             ma = ma->type->getChild(ma,target[i]);
         }
         if(!ma) {

@@ -73,7 +73,7 @@ MValue* TupleType::createConstructor(Context *ctx) {
         );
 
     auto arg = F->arg_begin();
-    for( int i = 0; i < namedValues.size(); i++ ) {
+    for( size_t i = 0; i < namedValues.size(); i++ ) {
         auto v = namedValues[i];
         Value *valPtr = Builder.CreateGEP(
             //v.second->llvmType(),
@@ -91,7 +91,7 @@ MValue* TupleType::createConstructor(Context *ctx) {
     return new MValue({ft,F});
 }
 MValue* TupleType::getChild(MValue *src, std::string name) { 
-    int i = 0;
+    size_t i = 0;
     for(; i < namedValues.size(); i++ )
         if( namedValues[i].first == name) break;
     Value *valPtr = Builder.CreateGEP(src->value(),{
@@ -114,11 +114,12 @@ TupleType* MTupleTypeAST::codegen(Context *ctx) {
 
 MValueType* TupleAST::calculateType(Context *ctx) {
     // TODO: calculateType
+    assert(0);
+    return 0;
 }
 
 MValue* TupleAST::codegen(Context *ctx, MValueType *type) {
     LLVMContext &lctx = getGlobalContext();
-    Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(lctx));
 
     if(!hasPrecodegen) {
         std::cerr << "TODO, tuple: has not precodegen\n";
@@ -152,7 +153,7 @@ MValue* TupleAST::codegen(Context *ctx, MValueType *type) {
         std::vector<Value *> fmalloc_args({size});
         Value *call = Builder.CreateCall(fmalloc, fmalloc_args, "tuple_alloc");
         Value *a = Builder.CreateBitCast(call, stPtr, "tuple");
-        for (int i = 0; i < values.size(); i++) {
+        for (size_t i = 0; i < values.size(); i++) {
             Value *valPtr = Builder.CreateGEP(a, {
                     ConstantInt::get(lctx, APInt(32, (uint64_t) 0)),
                     ConstantInt::get(lctx, APInt(32, (uint64_t) i))
@@ -169,7 +170,7 @@ MValue* TupleAST::codegen(Context *ctx, MValueType *type) {
         Function *fmalloc = ctx->storage->module->getFunction("malloc");
         Value *call = Builder.CreateCall(fmalloc, fmalloc_args, "tuple_alloc");
         Value *a = Builder.CreateBitCast(call, tt->llvmType(), "tuple");
-        for (int i = 0; i < values.size(); i++) {
+        for (size_t i = 0; i < values.size(); i++) {
             Value *valPtr = Builder.CreateGEP(a, {
                     ConstantInt::get(lctx, APInt(32, (uint64_t) 0)),
                     ConstantInt::get(lctx, APInt(32, (uint64_t) i))

@@ -20,52 +20,30 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_PROCEDURE_H
-#define HCLANG_AST_PROCEDURE_H
+#ifndef HCLANG_AST_STMT_LET_H
+#define HCLANG_AST_STMT_LET_H
 
-#include "base.h"
+#include "ast/base.h"
 
-struct ProcedureType : MValueType {
-    ProcedureType(llvm::Type* _llvmType, MValueType *retType):
-        MValueType(_llvmType,true,retType)
-    {}
-};
-
-struct ProcedureAsyncInstanceType : MValueType {
-    ProcedureAsyncInstanceType(llvm::Type* _llvmType):
-        MValueType(_llvmType)
-    {}
-};
-
-struct ProcedureAsyncType : MValueType {
-    ProcedureAsyncType(llvm::Type* _llvmType, MValueType *retType):
-        MValueType(_llvmType,true,retType)
-    {}
-};
-
-class ProcedureDecl : public Statement {
+class LetStmt : public Statement {
 public:
-    ProcedureDecl( std::string name, MTupleTypeAST *args, MTypeAST *retType, StatementList *list, bool async ):
-        name(name),
-        args(args),
-        returnType(retType),
-        stmts(list),
-        async(async)
-    {
-        assert(returnType);
-    }
+    LetStmt(Path target, MTypeAST *letType, MValueAST *value):
+        target(target),
+        letType(letType),
+        value(value)
+    {}
 
     virtual void codegen(Context *ctx);
-    virtual void collectAlloc ( Context* ctx ) {}
+    virtual void collectAlloc ( Context* ctx );
 
     virtual void print(Printer &p) const;
 
 private:
-    std::string name;
-    MTupleTypeAST *args;
-    MTypeAST *returnType;
-    StatementList *stmts;
-    bool async;
+    Path target;
+    MTypeAST *letType;
+    MValueAST *value;
+    int allocId;
 };
 
-#endif // HCLANG_AST_PROCEDURE_H
+
+#endif // HCLANG_AST_STMT_LET_H

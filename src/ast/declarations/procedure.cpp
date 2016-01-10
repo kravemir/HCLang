@@ -22,7 +22,7 @@
  */
 #include "procedure.h"
 
-#include "tuple.h"
+#include "ast/types/tuple.h"
 
 using namespace llvm;
 
@@ -70,7 +70,7 @@ void ProcedureDecl::codegen(Context *_ctx) {
         Builder.SetInsertPoint(BB);
 
         auto it = F->arg_begin();
-        for( int i = 0; i < this->args->namedValues.size(); i++, it++ ) {
+        for( size_t i = 0; i < this->args->namedValues.size(); i++, it++ ) {
             auto v = this->args->namedValues[i];
             it->setName(v.first);
             ctx.bindValue(v.first,new MValue({ args_types[i].second, it}));
@@ -128,12 +128,12 @@ void ProcedureDecl::codegen(Context *_ctx) {
         _ctx->bindValue(name, new MValue(ptype,create_fn));
 
         {
-            auto *ft = new ProcedureType(msg_ft,returnType);
+            /* TODO: current type of procedure / recursion: auto *ft = new ProcedureType(msg_ft,returnType); */
 
             // Create a new basic block to start insertion into.
             BasicBlock *BB = BasicBlock::Create(getGlobalContext(), "entry", process_fn);
             Builder.SetInsertPoint(BB);
-            for(int i = 0; i < ctx.allocaTypes.size(); i++) {
+            for(size_t i = 0; i < ctx.allocaTypes.size(); i++) {
                 ctx.allocas.push_back(Builder.CreateGEP(process_fn->arg_begin(),
                                          {
                                                  ConstantInt::get(lctx, APInt((unsigned) 32, (uint64_t) 0)),
@@ -144,7 +144,7 @@ void ProcedureDecl::codegen(Context *_ctx) {
             BasicBlock *BStart = BasicBlock::Create(getGlobalContext(), "start", process_fn);
             Builder.SetInsertPoint(BStart);
 
-            for( int i = 0; i < this->args->namedValues.size(); i++ ) {
+            for( size_t i = 0; i < this->args->namedValues.size(); i++ ) {
                 auto v = this->args->namedValues[i];
                 Value *valPtr = Builder.CreateGEP(
                     ++(++(process_fn->arg_begin())),
@@ -170,7 +170,7 @@ void ProcedureDecl::codegen(Context *_ctx) {
                 }), "state");*/
                 Value *val = ++(process_fn->arg_begin());
                 SwitchInst *SI = Builder.CreateSwitch(val, BStart, 0);
-                for(int i = 0; i < ctx.blocks.size(); i++) {
+                for(size_t i = 0; i < ctx.blocks.size(); i++) {
                     SI->addCase(ConstantInt::get(lctx,APInt((unsigned)32,(uint64_t)(i+1))), ctx.blocks[i]);
                 }
             } else {
@@ -187,14 +187,14 @@ void ProcedureDecl::codegen(Context *_ctx) {
                 ctx.storage->module->getTypeByName("struct.ConnectionVtable"),
                 Constant::getNullValue(Type::getInt8PtrTy(getGlobalContext())),
                 Constant::getNullValue(Type::getInt8PtrTy(getGlobalContext())),
-                0
+                nullptr
             );
             Constant *format_const = ConstantStruct::get(
                 ctx.storage->module->getTypeByName("struct.SystemVtable"),
                 contable_const,
                 //Constant::getNullValue(Type::getInt8PtrTy(getGlobalContext())),
                 process_fn,
-                0
+                nullptr
             );
             if(ctx.storage->module->getTypeByName("struct.ConnectionVtable") == 0) return;
             vtable = new GlobalVariable(

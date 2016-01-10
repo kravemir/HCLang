@@ -20,28 +20,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_AST_H
-#define HCLANG_AST_AST_H
+#ifndef HCLANG_AST_CALL_EXPR_H
+#define HCLANG_AST_CALL_EXPR_H
 
-#include "base.h"
+#include "ast/base.h"
 
-#include "declarations/system.h"
-#include "declarations/slot.h"
-#include "declarations/procedure.h"
+class CallExpr : public MValueAST {
+public:
+    CallExpr( MValueAST *val, TupleAST *args ):
+            val(val),
+            args(args)
+    {}
 
-#include "types/array.h"
-#include "types/tuple.h"
-#include "types/union.h"
+    virtual void preCodegen(Context *ctx);
+    virtual MValueType* calculateType(Context *ctx);
+    virtual MValue* codegen(Context *ctx, MValueType *type = 0);
+    std::string toString() const;
 
-#include "statements/let.h"
-#include "statements/send.h"
-#include "statements/expr.h"
-#include "statements/return.h"
-#include "statements/for.h"
-#include "statements/var.h"
+private:
+    int precodegenVarId = -1;
+    MValueAST *val;
+    MValue *asyncCallResult;
+    TupleAST *args;
+};
 
-#include "expressions/binop.h"
-#include "expressions/call.h"
-#include "expressions/cond.h"
-
-#endif // HCLANG_AST_AST_H
+#endif //HCLANG_AST_CALL_EXPR_H

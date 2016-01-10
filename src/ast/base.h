@@ -346,46 +346,9 @@ private:
     std::string val;
 };
 
-class CondExpr : public MValueAST {
-public:
-    CondExpr(MValueAST *cond, MValueAST *thenVal, MValueAST *elseVal):
-        cond(cond),
-        thenVal(thenVal),
-        elseVal(elseVal)
-    {}
-
-    virtual MValueType* calculateType(Context *ctx) {
-        // TODO: calculateType
-    };
-    virtual MValue* codegen(Context *ctx, MValueType *type = 0);
-    virtual std::string toString() const;
-
-private:
-    MValueAST *cond, *thenVal, *elseVal;
-};
-
 typedef std::vector<MValueAST*> MValueList;
 typedef std::map<std::string,MValueAST*> MValueMap;
 
-
-class CallExpr : public MValueAST {
-public:
-    CallExpr( MValueAST *val, TupleAST *args ):
-        val(val),
-        args(args)
-    {}
-
-    virtual void preCodegen(Context *ctx);
-    virtual MValueType* calculateType(Context *ctx);
-    virtual MValue* codegen(Context *ctx, MValueType *type = 0);
-    std::string toString() const;
-
-private:
-    int precodegenVarId = -1;
-    MValueAST *val;
-    MValue *asyncCallResult;
-    TupleAST *args;
-};
 
 class Statement;
 struct StatementList : std::vector<Statement*> {
@@ -436,25 +399,6 @@ private:
     MTupleTypeAST *args;
     StatementList *stmts;
     MTypeAST *retType;
-};
-
-class VarDecl : public Statement {
-public:
-    VarDecl(std::string name, MTypeAST *type, MValueAST *val);
-
-    virtual void codegen(Context *ctx);
-    virtual void collectSystemDecl(Context *ctx) const;
-    virtual void collectAlloc ( Context* ctx );
-
-    virtual void print(Printer &p) const;
-
-private:
-    std::string name;
-    MTypeAST *type;
-    MValueAST *val;
-
-    MValueType *typeVal;
-    llvm::AllocaInst *alloc = 0;
 };
 
 class ImportStmt : public Statement {
@@ -524,40 +468,6 @@ public:
 private:
     CondStmtList stmts;
     StatementList *elStmt;
-};
-
-class ReturnStmt : public Statement {
-public:
-    ReturnStmt(MValueAST *val);
-
-    virtual void codegen(Context *ctx);
-    virtual void collectAlloc ( Context* ctx ) {
-        /* TODO collect alloc of value */
-    }
-
-    virtual void print(Printer &p) const;
-private:
-    MValueAST *val;
-};
-
-class ForStmt : public Statement {
-public:
-    ForStmt(std::string target_name, MValueAST *inval, StatementList *stmts):
-        target_name(target_name),
-        inval(inval),
-        stmts(stmts)
-    {}
-
-    virtual void codegen(Context *ctx);
-    virtual void collectAlloc ( Context* ctx );
-
-    virtual void print(Printer &p) const;
-private:
-    std::string target_name;
-    MValueAST *inval;
-    StatementList *stmts;
-
-    llvm::AllocaInst* iPtr = 0;
 };
 
 

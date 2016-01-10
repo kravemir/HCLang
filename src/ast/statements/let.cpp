@@ -20,30 +20,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_STMT_LET_H
-#define HCLANG_AST_STMT_LET_H
+#include "let.h"
 
-#include "base.h"
+#include "printer.h"
 
-class LetStmt : public Statement {
-public:
-    LetStmt(Path target, MTypeAST *letType, MValueAST *value):
-        target(target),
-        letType(letType),
-        value(value)
-    {}
+void LetStmt::codegen(Context *ctx) {
+    MValueType *t = 0;
+    if( letType )
+        t = letType->codegen(ctx);
 
-    virtual void codegen(Context *ctx);
-    virtual void collectAlloc ( Context* ctx );
+    llvm::Value* alloca = ctx->getAlloc(this->allocId);
+    MValue *val;
+    val = value->codegen(ctx, t);
+    Builder.CreateStore(val->value(), alloca);
+    ctx->bindValue(target[0], new MValue(val->type,alloca,true)); // TODO
+}
 
-    virtual void print(Printer &p) const;
+void LetStmt::collectAlloc(Context *ctx) {
+    MValueType *t = letType ? letType->codegen(ctx) : value->calculateType(ctx);
+    assert(t);
+    this->allocId = ctx->createAlloc(t);
+}
 
-private:
-    Path target;
-    MTypeAST *letType;
-    MValueAST *value;
-    int allocId;
-};
-
-
-#endif // HCLANG_AST_STMT_LET_H
+void LetStmt::print(Printer &p) const {
+    p.println( target[0] + " = " + value->toString()); // TODO
+}

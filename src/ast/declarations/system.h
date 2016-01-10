@@ -20,22 +20,50 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_EXPRBINOP_H
-#define HCLANG_AST_EXPRBINOP_H
+#ifndef HCLANG_AST_SYSTEM_H
+#define HCLANG_AST_SYSTEM_H
 
-#include "base.h"
+#include "ast/base.h"
 
-class BinaryOpAST : public MValueAST {
-public:
-    BinaryOpAST(Token::Type op, MValueAST *left, MValueAST *right);
+class SlotType;
 
-    virtual MValueType* calculateType(Context *ctx);
-    virtual MValue* codegen(Context *ctx, MValueType *type = 0);
-    virtual std::string toString() const;
+struct SystemType : MValueType {
+    int slotCount = 0;
+    std::map<std::string,int> slotIds;
+    std::vector<llvm::Function*> slots;
+    std::vector<SlotType*> slotTypes;
+    llvm::Function *fn_new;
 
-private:
-    Token::Type op;
-    MValueAST *left, *right;
+    std::vector<std::pair<std::string,MValueType*>> variables;
+
+
+    virtual llvm::Type* llvmType() const {
+        return _llvmType;
+    }
+    virtual MValue* getChild(MValue *src, std::string name);
+
+
+    virtual MValueType *getChildType(std::string name) override;
+
+    llvm::Type* _llvmType;
 };
 
-#endif // HCLANG_AST_EXPRBINOP_H
+struct SystemDecl : Statement {
+    SystemDecl( std::string name, StatementList *list ):
+        name(name),
+        stmts(list)
+    {}
+
+    virtual void codegen(Context *ctx);
+    virtual void collectAlloc ( Context* ctx ) {};
+
+    virtual void print(Printer &p) const;
+
+private:
+    llvm::Function* codegen_msghandler(Context *ctx);
+
+    std::string name;
+    StatementList *stmts;
+};
+
+#endif // HCLANG_AST_SYSTEM_H

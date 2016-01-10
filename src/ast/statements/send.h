@@ -20,28 +20,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_AST_H
-#define HCLANG_AST_AST_H
+#ifndef HCLANG_AST_STMTSEND_H
+#define HCLANG_AST_STMTSEND_H
 
-#include "base.h"
+#include "ast/base.h"
 
-#include "declarations/system.h"
-#include "declarations/slot.h"
-#include "declarations/procedure.h"
+class SendStmt : public Statement {
+public:
+    SendStmt(Path target, std::string msg, TupleAST *args);
 
-#include "types/array.h"
-#include "types/tuple.h"
-#include "types/union.h"
+    virtual void codegen(Context *ctx);
+    virtual void collectAlloc ( Context* ctx );
 
-#include "statements/let.h"
-#include "statements/send.h"
-#include "statements/expr.h"
-#include "statements/return.h"
-#include "statements/for.h"
-#include "statements/var.h"
+    virtual void print(Printer &p) const;
+private:
+    Path target;
+    std::string msg;
+    TupleAST *args;
+};
 
-#include "expressions/binop.h"
-#include "expressions/call.h"
-#include "expressions/cond.h"
 
-#endif // HCLANG_AST_AST_H
+#endif // HCLANG_AST_STMTSEND_H

@@ -23,8 +23,9 @@
 #ifndef HCLANG_AST_SLOT_H
 #define HCLANG_AST_SLOT_H
 
-#include "base.h"
-#include "tuple.h"
+#include "ast/base.h"
+
+#include "ast/types/tuple.h"
 
 class SlotType : public MValueType {
 public:

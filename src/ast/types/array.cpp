@@ -86,7 +86,6 @@ MValue* ArrayAST::codegen(Context *ctx, MValueType *type) {
     }
 
     LLVMContext &lctx = getGlobalContext();
-    Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(lctx));
 
     std::vector<Value*> values;
     std::vector<MValueType*> types;
@@ -124,7 +123,7 @@ MValue* ArrayAST::codegen(Context *ctx, MValueType *type) {
         )
     );
 
-    for( int i = 0; i < values.size(); i++ ) {
+    for( size_t i = 0; i < values.size(); i++ ) {
         Value *valPtr = Builder.CreateGEP(
             a,
             std::vector<llvm::Value*>({

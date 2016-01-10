@@ -85,7 +85,7 @@ void SystemDecl::print(Printer &p) const {
 }
 void SlotDecl::print(Printer &p) const {
     std::string argss = "(";
-    bool first = true;
+    //bool first = true;
     /*for( auto a : *args ) {
         if(first)
             first = false;
@@ -101,7 +101,7 @@ void SlotDecl::print(Printer &p) const {
 }
 void FunctionDecl::print(Printer &p) const {
     std::string argss = "(";
-    bool first = true;
+    //bool first = true;
     /*for( auto a : *args ) {
         if(first)
             first = false;
@@ -118,7 +118,7 @@ void FunctionDecl::print(Printer &p) const {
 
 void ProcedureDecl::print(Printer &p) const {
     std::string argss = "(";
-    bool first = true;
+    //bool first = true;
     /*for( auto a : *args ) {
         if(first)
             first = false;
