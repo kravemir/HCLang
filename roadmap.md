@@ -47,6 +47,7 @@ Features:
 
 
 ## Future goals
+
 ### Advanced Memory management
 Sub-goal of 3rd primary goal.
 
