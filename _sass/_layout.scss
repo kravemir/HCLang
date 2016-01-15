@@ -2,12 +2,21 @@
  * Site header
  */
 .site-header {
-    border-top: 5px solid $grey-color-dark;
-    border-bottom: 1px solid $grey-color-light;
+    /* border-top: 5px solid $grey-color-dark; */
+    /* border-bottom: 1px solid $grey-color-light; */
     min-height: 56px;
 
     // Positioning context for the mobile navigation icon
     position: relative;
+    
+    
+    margin: 0 0 $spacing-unit*5/3 0;
+    background: #C9EFA2;
+    border-bottom: #B2D88C solid 1px;
+
+    .wrapper {
+        padding: $spacing-unit/3 $spacing-unit;
+    }
 }
 
 .site-title {
@@ -98,8 +107,12 @@
  * Site footer
  */
 .site-footer {
-    border-top: 1px solid $grey-color-light;
+    /* border-top: 1px solid $grey-color-light; */
+    margin: $spacing-unit*5/3 0 0;
     padding: $spacing-unit 0;
+    
+    background: #C9EFA2;
+    border-top: #B2D88C solid 1px;
 }
 
 .footer-heading {
@@ -168,14 +181,20 @@
  * Page content
  */
 .page-content {
-    padding: $spacing-unit 0;
+    /* padding: $spacing-unit 0; */
 
     > .wrapper {
         background: #FCFCFC;
-        box-shadow: 0px 1px 0.5em #CCC;
+        box-shadow: 2px 2px 0.5em #CCC;
         padding-top: 1px;
-        border-radius: 0.75em;
+        border-radius: 0.20em;
         border: solid 1px #98B976;
+
+        @include media-query($on-palm) {
+            border: none;
+            box-shadow: none;
+            border-radius: none;
+        }
     }
 }
 
