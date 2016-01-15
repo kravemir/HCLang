@@ -1,0 +1,7 @@
+---
+# CSS optimalized for laptop
+---
+$screen_type: "laptop";
+$content-width: {{ site.visual.laptop.content-width }};
+
+@import "common";

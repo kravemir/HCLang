@@ -9,3 +9,17 @@ url: "http://hclang.kravemir.org"
 
 # Build settings
 markdown: kramdown
+
+visual:
+  palm:
+    min-width:      0px
+    max-width:      740pt
+    content-width:  100%
+  laptop:
+    min-width:      741pt
+    max-width:      1040pt
+    content-width:  720pt
+  normal:
+    min-width: 1041pt
+    max-width: 999999pt
+    content-width:  1020pt

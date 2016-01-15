@@ -1,0 +1,7 @@
+---
+# CSS optimalized for palm
+---
+$screen_type: "palm";
+$content-width: {{ site.visual.palm.content-width }};
+
+@import "common";

@@ -1,0 +1,7 @@
+---
+# CSS optimalized for normal
+---
+$screen_type: "normal";
+$content-width: {{ site.visual.normal.content-width }};
+
+@import "common";
