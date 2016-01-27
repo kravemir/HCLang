@@ -49,7 +49,7 @@
 #include <vector>
 #include <unistd.h>
 
-#include "parser.h"
+#include "frontend/parser.h"
 #include "printer.h"
 
 #include "base.hpp"

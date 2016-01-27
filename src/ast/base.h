@@ -30,7 +30,7 @@
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Module.h"
 
-#include "lexer.h"
+#include "frontend/lexer.h"
 
 extern llvm::IRBuilder<> Builder;
 extern llvm::LLVMContext &lctx;

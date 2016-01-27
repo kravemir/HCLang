@@ -21,10 +21,11 @@ llvm_map_components_to_libnames(llvm_libs core mcjit native irreader)
 # SOURCES
 
 set ( HCLANG_SRCS
+    frontend/lexer.cpp
+    frontend/parser.cpp
+
     ast/ast.cpp
     ast/ast.print.cpp
-    lexer.cpp
-    parser.cpp
     base.cpp
     printer.cpp
 
@@ -52,9 +53,10 @@ set ( HCLANG_SRCS
 )
 
 set ( HCLANG_HEADERS
+    frontend/lexer.h
+    frontend/parser.h
+
     ast/ast.h
-    lexer.h
-    parser.h
     base.h
     printer.h
 
