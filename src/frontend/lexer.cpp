@@ -23,6 +23,7 @@
  */
 #include <cstdlib>
 #include <cstdio>
+#include <assert.h>
 
 #include "lexer.h"
 
@@ -437,6 +438,8 @@ std::vector<Token> lexerBuf(const char *data, int len)
 std::vector<Token> lexerFile(const char *fname)
 {
     FILE *f = fopen(fname, "rb");
+
+    assert(f && "Can't open file");
 
     fseek(f, 0, SEEK_END);
     long fsize = ftell(f);

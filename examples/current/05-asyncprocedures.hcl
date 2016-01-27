@@ -1,8 +1,8 @@
 procedure print_normal(str : String):
-    stdout ! println( str )
+    stdout.println ! ( str )
 
 procedure print_async(str : String) async:
-    stdout ! println(str)
+    stdout.println ! (str)
 
 procedure main():
     print_normal("1st print")

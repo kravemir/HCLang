@@ -3,7 +3,7 @@
 
 system HelloWorld:
     slot hello():
-        stdout ! println("HelloWorld")
+        stdout.println ! ("HelloWorld")
 
 
 # main procedure is executed when program starts
@@ -12,4 +12,4 @@ procedure main():
     let helloWorld = spawn HelloWorld
 
     # send hello message to the system
-    helloWorld ! hello()
+    helloWorld.hello ! ()

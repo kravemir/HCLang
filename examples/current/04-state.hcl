@@ -15,7 +15,7 @@ system Counter:
         if self.count > self.max:
             self.count = self.max
 
-        stdout ! printfln("Counter state is: %d.", self.count)
+        stdout.printfln ! ("Counter state is: %d.", self.count)
 
 
 system CounterController:
@@ -23,16 +23,16 @@ system CounterController:
 
     slot run():
         self.counter = spawn Counter
-        self.counter ! init(7)
-        self ! counting (10)
+        self.counter.init ! (7)
+        self.counting ! (10)
 
     slot counting( n : int ):
-        self.counter ! next()
-        stdout ! printfln("Controller %d", n)
+        self.counter.next ! ()
+        stdout.printfln ! ("Controller %d", n)
         if 1 < n:
-            self ! counting( n-1 )
+            self.counting ! ( n-1 )
 
 
 procedure main():
     let controller = spawn CounterController
-    controller ! run()
+    controller.run ! ()

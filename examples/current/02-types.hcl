@@ -8,4 +8,4 @@ procedure main():
     ]
 
     for msg in msgs:
-        stdout ! println( "An message for " + msg.to_address + ": " + msg.content )
+        stdout.println ! ( "An message for " + msg.to_address + ": " + msg.content )

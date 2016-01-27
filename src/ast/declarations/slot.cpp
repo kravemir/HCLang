@@ -91,7 +91,7 @@ void SlotDecl::codegen ( Context *_ctx ) {
         } );
         Value *valPtr = Builder.CreateGEP ( ++ ( F->arg_begin() ), args, v.first + "_ptr" );
         auto type = v.second->codegen ( &ctx );
-        if( dynamic_cast<SlotType*>(slotArgsTuple->namedValues[i].second) == 0 )
+        if( (dynamic_cast<SlotType*>(slotArgsTuple->namedValues[i].second) == 0) || true )
             ctx.bindValue ( v.first,new MValue ( { type, Builder.CreateLoad ( valPtr, v.first ) } ) );
         else
             ctx.bindValue ( v.first,new MValue ( { type, valPtr } ) );
