@@ -162,8 +162,10 @@ void CondStmt::codegen(Context *ctx) {
         Builder.SetInsertPoint(ThenBB);
         // Codegen of 'Then' can change the current block, update ThenBB for the PHI.
         ThenBB = Builder.GetInsertBlock();
-        for( auto *s : *stmts[i].second )
-            s->codegen(ctx);
+
+
+        stmts[i].second->codegen(ctx);
+
         Builder.CreateBr(MergeBB);
 
         // Emit else block.
@@ -171,10 +173,9 @@ void CondStmt::codegen(Context *ctx) {
         Builder.SetInsertPoint(ElseBB);
 
         if( i == stmts.size() - 1 ) {
-            if( elStmt ) {
-                for( auto *s : *elStmt )
-                    s->codegen(ctx);
-            }
+            if( elStmt )
+                elStmt->codegen(ctx);
+
             Builder.CreateBr(MergeBB);
             // Codegen of 'Else' can change the current block, update ElseBB for the PHI.
             ElseBB = Builder.GetInsertBlock();
@@ -188,12 +189,10 @@ void CondStmt::codegen(Context *ctx) {
 
 void CondStmt::collectAlloc(Context *ctx) {
     for( size_t i = 0; i < stmts.size(); i++ )
-        for( auto *s : *stmts[i].second )
-            s->collectAlloc(ctx);
+        stmts[i].second->collectAlloc(ctx);
 
     if( elStmt )
-        for( auto *s : *elStmt )
-            s->collectAlloc(ctx);
+        elStmt->collectAlloc(ctx);
 }
 
 void TypeDecl::codegen(Context *ctx) {
@@ -234,8 +233,8 @@ void FunctionDecl::codegen(Context *_ctx) {
         ctx.bindValue(v.first, new MValue({types[i],arg}));
     }
 
-    for(Statement *stmt : *stmts)
-        stmt->codegen(&ctx);
+    stmts->collectAlloc(&ctx);
+    stmts->codegen(&ctx);
 }
 void MatchAssignStmt::codegen(Context *ctx) {
     Function *TheFunction = Builder.GetInsertBlock()->getParent();
@@ -283,4 +282,14 @@ void MatchAssignStmt::codegen(Context *ctx) {
     }
     ctx->bindValue(target[0], new MValue{ 0, phi });
     return;
+}
+
+void StatementList::codegen(Context *ctx) {
+    for( auto *s : *this )
+        s->codegen(ctx);
+}
+
+void StatementList::collectAlloc(Context *ctx) {
+    for( auto *s : *this )
+        s->collectAlloc(ctx);
 }

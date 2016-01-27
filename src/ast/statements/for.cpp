@@ -47,8 +47,8 @@ void ForStmt::codegen(Context *ctx) {
     TheFunction->getBasicBlockList().push_back(forBB);
     Builder.SetInsertPoint(forBB);
     ctx->bindValue(target_name, val->type->getArrayChild(val,Builder.CreateLoad(iPtr)));
-    for( auto *s : *stmts )
-        s->codegen(ctx);
+
+    stmts->codegen(ctx);
     Builder.CreateStore(
             Builder.CreateAdd(Builder.CreateLoad(iPtr),ConstantInt::get(lctx,APInt((unsigned)64,(uint64_t)1))),
             iPtr
@@ -61,7 +61,6 @@ void ForStmt::codegen(Context *ctx) {
 
 void ForStmt::collectAlloc ( Context* ctx ) {
     iPtr = Builder.CreateAlloca(Type::getInt64Ty(lctx),0,"for.i.alloca");
-    for( auto *s : *stmts )
-        s->collectAlloc(ctx);
+    stmts->collectAlloc(ctx);
 }
 

@@ -352,6 +352,8 @@ typedef std::map<std::string,MValueAST*> MValueMap;
 
 class Statement;
 struct StatementList : std::vector<Statement*> {
+    void codegen(Context *ctx);
+    void collectAlloc(Context* ctx);
 };
 
 class Statement {

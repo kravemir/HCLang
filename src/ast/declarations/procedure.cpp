@@ -76,10 +76,8 @@ void ProcedureDecl::codegen(Context *_ctx) {
             ctx.bindValue(v.first,new MValue({ args_types[i].second, it}));
         }
 
-        for(Statement *stmt : *stmts)
-            stmt->collectAlloc(&ctx);
-        for(Statement *stmt : *stmts)
-            stmt->codegen(&ctx);
+        stmts->collectAlloc(&ctx);
+        stmts->codegen(&ctx);
 
         Builder.CreateRetVoid();
 
@@ -93,8 +91,7 @@ void ProcedureDecl::codegen(Context *_ctx) {
 
         std::vector<Type*> types({ ctx.storage->module->getTypeByName("struct.System"), IntType::create(&ctx)->llvmType() });
 
-        for(Statement *stmt : *stmts)
-            stmt->collectAlloc(&ctx);
+        stmts->collectAlloc(&ctx);
 
         for(llvm::Type *t : ctx.allocaTypes)
             types.push_back(t);
@@ -156,8 +153,7 @@ void ProcedureDecl::codegen(Context *_ctx) {
                 ctx.bindValue(v.first,new MValue({ args_types[i].second, Builder.CreateLoad(valPtr, v.first)}));
             }
 
-            for(Statement *stmt : *stmts)
-                stmt->codegen(&ctx);
+            stmts->codegen(&ctx);
 
             Builder.CreateRetVoid();
 

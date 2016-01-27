@@ -97,11 +97,8 @@ void SlotDecl::codegen ( Context *_ctx ) {
             ctx.bindValue ( v.first,new MValue ( { type, valPtr } ) );
     }
 
-    for ( Statement *stmt : *stmts )
-        stmt->collectAlloc ( &ctx );
-
-    for ( Statement *stmt : *stmts )
-        stmt->codegen ( &ctx );
+    stmts->collectAlloc(&ctx);
+    stmts->codegen(&ctx);
 
     Builder.CreateRetVoid();
     s->slots.push_back ( F );
