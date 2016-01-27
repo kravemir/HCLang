@@ -30,9 +30,9 @@ struct TupleType : MValueType {
     std::vector<std::pair<std::string,MValueType*>> namedValues;
 
 
-    virtual MValue* getChild(MValue *src, std::string name);
+    virtual MValue* getChild(MValue *src, std::string name) override;
     int getIndex(std::string name);
-    virtual MValue* createConstructor(Context *ctx);
+    virtual MValue* createConstructor(Context *ctx) override;
     
     static TupleType *create( std::vector<std::pair<std::string,MValueType*>> namedValues, std::string name = "tuple");
     
@@ -59,12 +59,12 @@ struct MTupleTypeAST : MTypeAST {
 struct TupleAST : MValueAST {
     TupleAST( MValueList *values, MValueMap *namedMValues );
 
-    virtual MValueType* calculateType(Context *ctx);
+    virtual MValueType* calculateType(Context *ctx) override;
 
     virtual void preCodegen(Context *ctx) override;
-    virtual MValue* codegen(Context *ctx, MValueType *type = 0);
+    virtual MValue* codegen(Context *ctx, MValueType *type = 0) override;
 
-    std::string toString() const;
+    std::string toString() const override;
 
     MValueAST* get(size_t idx) {
         return (*values)[idx];

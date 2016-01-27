@@ -3,7 +3,7 @@ cmake_minimum_required (VERSION 2.8)
 project( HCLang )
 
 # USING c++11 and includes
-add_definitions( -Wall -g --std=c++11 -fPIC )
+add_definitions( -Wall -pedantic -g --std=c++11 -fPIC )
 include_directories(${HCLang_SOURCE_DIR}/)
 
 # LLVM CONFIG

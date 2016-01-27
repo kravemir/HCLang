@@ -74,7 +74,7 @@ void SendStmt::codegen(Context *ctx) {
             std::cerr << "Can't find connection of `" << target[0] << "`\n";
         } else {
             SystemType *system_type = dynamic_cast<SystemType*>(ma->type);
-            SlotType *slot_type = dynamic_cast<SlotType*>(ma->type);
+            // TODO? SlotType *slot_type = dynamic_cast<SlotType*>(ma->type);
 
             if(system_type) {
                 args->preCodegen(ctx);

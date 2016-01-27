@@ -40,7 +40,7 @@ MValue* MUnionType::createCast(Context *ctx, MValue *val ) {
         Type::getInt32Ty(lctx),
         ArrayType::get(Type::getInt8Ty(lctx), size)
     });
-    StructType *st = StructType::create(lctx, types, "tuple");
+    // TODO: StructType *st = StructType::create(lctx, types, "tuple");
     
     Function *fmalloc = ctx->storage->module->getFunction("malloc");
     std::vector<Value *> fmalloc_args({ConstantInt::get(lctx,APInt((unsigned)64,(uint64_t)size))});

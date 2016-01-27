@@ -30,7 +30,7 @@ class ProcedureContext : public Context {
 public:
     ProcedureContext(Context *parent) : Context(parent) { }
 
-    virtual int addAwaitId(BasicBlock *b) {
+    virtual int addAwaitId(BasicBlock *b) override {
         blocks.push_back(b);
         return blocks.size();
     };

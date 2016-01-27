@@ -41,8 +41,6 @@ struct MUnionType : MValueType {
 private:
     std::vector<MValueType*> alternatives;
     int size;
-
-    llvm::Type *_llvmType = 0;
 };
 
 class MUnionTypeAST : public MTypeAST {

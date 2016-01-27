@@ -37,10 +37,10 @@ struct SystemType : MValueType {
     std::vector<std::pair<std::string,MValueType*>> variables;
 
 
-    virtual llvm::Type* llvmType() const {
+    virtual llvm::Type* llvmType() const override {
         return _llvmType;
     }
-    virtual MValue* getChild(MValue *src, std::string name);
+    virtual MValue* getChild(MValue *src, std::string name) override;
 
 
     virtual MValueType *getChildType(std::string name) override;
