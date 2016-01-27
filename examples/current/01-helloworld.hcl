@@ -1,20 +1,15 @@
-# HelloWorld example showing:
-#  * system instantiation 
-#  * message sending
+# HelloWorld example showing
+
 
 system HelloWorld:
     slot hello():
-        self    ! info_a ()
-        stdout  ! println("HelloWorld")
-        self    ! info_x ( "B" )
+        stdout ! println("HelloWorld")
 
-    slot info_a():
-        stdout  ! println("Info A")
-        self    ! info_x( "C" )
 
-    slot info_x(x : String):
-        stdout  ! println("Info " + x)
-
+# main procedure is executed when program starts
 procedure main():
+    # create new instance of HelloWorld system
     let helloWorld = spawn HelloWorld
+
+    # send hello message to the system
     helloWorld ! hello()

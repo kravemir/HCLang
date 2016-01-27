@@ -1,12 +1,10 @@
-# simple procedure that just prints stuff
-procedure print(start : int, end : int):
-    stdout ! printfln( "%d %d", start, end )
+procedure print_normal(str : String):
+    stdout ! println( str )
 
-# similar to previous, but gets compiled as asynchronous procedure
-procedure print_async(start : int, end : int) async:
-    stdout ! printfln( "%d %d", start, end )
+procedure print_async(str : String) async:
+    stdout ! println(str)
 
 procedure main():
-    print(1,10)
-    spawn print_async (2,20)
-    print(3,30)
+    print_normal("1st print")
+    spawn print_async ("2nd print")
+    print_normal("3rd print")
