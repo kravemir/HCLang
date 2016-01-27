@@ -85,7 +85,7 @@ add_library( HCLang ${HCLANG_SRCS} ${HCLANG_HEADERS} )
 
 add_custom_target(
     decl.ll
-    COMMAND clang -cc1 -emit-llvm -o decl.ll ${CMAKE_CURRENT_SOURCE_DIR}/base.h -DEXPORTLL
+    COMMAND ${CMAKE_C_COMPILER} -cc1 -emit-llvm -o decl.ll ${CMAKE_CURRENT_SOURCE_DIR}/base.h -DEXPORTLL
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/base.h
 )
 
