@@ -35,8 +35,22 @@ SlotType* SlotType::create ( Context *ctx, TupleType* argsType, MValueType *retu
 
     ((PointerType*)argsType->llvmType())->getElementType()->dump();
     SlotType * type = new SlotType ( st, argsType, returnType );
+    type->putMsgFn = ctx->storage->module->getFunction("system_putMsg");
+
     return type;
 }
+
+void SlotType::codegenSendTo(MValue *value, MValue *msg) {
+    Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(lctx));
+
+    std::vector<llvm::Value *> aadices({
+                                               Builder.CreateExtractValue(value->value(), {0}, "send.target"),
+                                               Builder.CreateExtractValue(value->value(), {1}, "send.msg"),
+                                               msg ? msg->value() : zero
+                                       });
+    Builder.CreateCall(putMsgFn, aadices);
+}
+
 
 MValueType* SlotTypeAST::codegen ( Context* ctx ) {
     TupleType *argsType = args->codegen ( ctx );

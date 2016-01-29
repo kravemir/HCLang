@@ -68,6 +68,10 @@ struct MValueType {
 
     virtual MValue* createConstructor(Context *ctx) { return 0; }
 
+    virtual void codegenSendTo(MValue *value, MValue *msg) {
+        assert( 0 && "Can't codegen this type" );
+    }
+
     virtual MValue* createCast(Context *ctx, MValue *src) { assert(0 && "Can't cast"); return 0; }
     virtual MValueType *callReturnType() {
         assert(callable);
