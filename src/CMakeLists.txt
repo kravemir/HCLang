@@ -50,6 +50,8 @@ set ( HCLANG_SRCS
     ast/expressions/binop.cpp
     ast/expressions/call.cpp
     ast/expressions/cond.cpp
+
+    corelib/stdout.cpp
 )
 
 set ( HCLANG_HEADERS
@@ -78,6 +80,8 @@ set ( HCLANG_HEADERS
     ast/expressions/binop.h
     ast/expressions/call.h
     ast/expressions/cond.h
+
+    corelib/stdout.h
 )
 
 add_library( HCLang ${HCLANG_SRCS} ${HCLANG_HEADERS} )

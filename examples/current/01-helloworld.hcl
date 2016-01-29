@@ -13,3 +13,6 @@ procedure main():
 
     # send hello message to the system
     helloWorld.hello ! ()
+
+    let stdouta = spawn StdOut
+    stdouta.println ! ( "HelloWorld - spawn" )
