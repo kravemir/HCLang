@@ -1,8 +1,7 @@
 procedure main2() async:
     let stdina = spawn StdIn
     let stdouta = spawn StdOut
-    let x = stdina.readln ()
-    stdouta.println ! ( x )
+    stdouta.println ! ( stdina.readln () )
 
 
 # main procedure is executed when program starts

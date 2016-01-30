@@ -64,6 +64,8 @@ void SendStmt::codegen(Context *ctx) {
                     var,
                     indices));
     } else {
+        args->preCodegen(ctx);
+        MValue *v_args = args->codegen(ctx);
         MValue *ma = ctx->getVariable(target[0]); // TODO
         for(size_t i = 1; i < target.size(); i++ ) {
             ma = ma->type->getChild(ma,target[i]);
@@ -71,8 +73,6 @@ void SendStmt::codegen(Context *ctx) {
         if(!ma) {
             std::cerr << "Can't find connection of `" << target[0] << "`\n";
         } else {
-            args->preCodegen(ctx);
-            MValue *v_args = args->codegen(ctx);
             ma->type->codegenSendTo(ma, v_args);
         }
     }
