@@ -48,34 +48,88 @@ void stdoutSystem_processMsg(System *s, int msg_id, void *data) {
 }
 
 static
-SystemVtable vtable = {
+SystemVtable stdout_vtable = {
         { 0, 0 },
         stdoutSystem_processMsg
 };
 
 System* stdout_new(Executor *e) {
-    StdOutSystem *s = (StdOutSystem*)malloc(sizeof(StdOutSystem));
-    system_init(&s->system,e, &vtable);
-    s->counter = 0;
-    return &s->system;
+    System *s = (System*)malloc(sizeof(System));
+    system_init(s,e, &stdout_vtable);
+    return s;
 }
+
+void stdinSystem_processMsg(System *s, int msg_id, void *data) {
+    int len;
+    char buf[512], *str;
+    SlotReference ref = *(SlotReference*)data;
+    char **ptr;
+    switch (msg_id) {
+        case 0:
+            fgets(buf, 512, stdin);
+            str = (char *) malloc(512);
+            strcpy(str, buf);
+            ptr = (char **) malloc(sizeof(char*));
+            *ptr = str;
+            system_putMsg(ref.system,ref.msg_id,ptr);
+            break;
+        default:
+            printf("wrong message\n");
+            break;
+    }
+}
+
+static
+SystemVtable stdin_vtable = {
+        { 0, 0 },
+        stdinSystem_processMsg
+};
+
+System* stdin_new(Executor *e) {
+    System *s = (System*)malloc(sizeof(System));
+    system_init(s,e, &stdin_vtable);
+    return s;
+}
+
 
 }
 
 #include "../ast/types/tuple.h"
 
-void stdout_register(Context *ctx) {
-    SystemType *t = new SystemType;
-    // TODO system type instance
-    ctx->bindValue("StdOut",new MValue( {t, (llvm::Value*)1}));
-    ctx->storage->types["StdOut"] = t;
+void stdio_register(Context *ctx) {
+    {
+        // TODO: connection type, not system type
+        SystemType *t = new SystemType;
+        // TODO system type instance
+        ctx->bindValue("StdOut", new MValue({t, (llvm::Value *) 1}));
+        ctx->storage->types["StdOut"] = t;
 
-    StructType *systemType = ctx->storage->module->getTypeByName("struct.StdOutSystem");
-    t->_llvmType = PointerType::get(systemType,0);
-    t->fn_new = ctx->storage->module->getFunction("stdout_new");
+        StructType *systemType = ctx->storage->module->getTypeByName("struct.System");
+        t->_llvmType = PointerType::get(systemType, 0);
+        t->fn_new = ctx->storage->module->getFunction("stdout_new");
 
 
-    TupleType *argsType = TupleType::create({{"msg", StringType::create(ctx)}});
-    t->slotIds["println"] = 0;
-    t->slotTypes.push_back(SlotType::create(ctx, argsType, 0));
+        TupleType *argsType = TupleType::create({{"msg", StringType::create(ctx)}});
+        t->slotIds["println"] = 0;
+        t->slotTypes.push_back(SlotType::create(ctx, argsType, 0));
+    }
+    {
+        // TODO: connection type, not system type
+        SystemType *t = new SystemType;
+        // TODO system type instance
+        ctx->bindValue("StdIn", new MValue({t, (llvm::Value *) 1}));
+        ctx->storage->types["StdIn"] = t;
+
+        StructType *systemType = ctx->storage->module->getTypeByName("struct.System");
+        t->_llvmType = PointerType::get(systemType, 0);
+        t->fn_new = ctx->storage->module->getFunction("stdin_new");
+
+        t->slotIds["readln"] = 0;
+        SlotType *rst = SlotType::create(ctx, TupleType::create( { {"val", StringType::create(ctx)} } ), 0 );
+        t->slotTypes.push_back(SlotType::create(
+                ctx,
+                TupleType::create({ {"return_slot", rst} }),
+                StringType::create(ctx)
+        ));
+    }
 }

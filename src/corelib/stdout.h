@@ -28,11 +28,6 @@
 #include "../base.hpp"
 
 /* TODO move from base
-typedef struct StdOutSystem {
-    System system;
-    int counter;
-} StdOutSystem;
-
 extern "C" {
 
 System* stdout_new(Executor *e);
@@ -40,6 +35,6 @@ System* stdout_new(Executor *e);
 }
  */
 
-void stdout_register(Context *pContext);
+void stdio_register(Context *pContext);
 
 #endif // HCLANG_CORELIB_STDOUT

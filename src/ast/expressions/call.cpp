@@ -28,6 +28,12 @@ using namespace llvm;
 
 MValueType* CallExpr::calculateType(Context *ctx) {
     MValueType *ft = val->calculateType(ctx);
+
+    SlotType *st = dynamic_cast<SlotType *>(ft);
+    if (st) {
+        return st->returnType;
+    }
+
     return ft->callReturnType();
 };
 void CallExpr::preCodegen(Context *ctx) {
@@ -41,6 +47,7 @@ void CallExpr::preCodegen(Context *ctx) {
         BasicBlock *BB = BasicBlock::Create(getGlobalContext(), "await_continue");
         int awaitId = ctx->addAwaitId(BB);
         MValue *ma = val->codegen(ctx);
+        ma->value()->dump();
         Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(lctx));
         args->preCodegen(ctx);
 

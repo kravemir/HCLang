@@ -107,6 +107,7 @@ struct MValue {
 
 struct ContextStorage {
     std::map<std::string,MValue*> values;
+    std::map<std::string,MValueType*>   valueTypes;
     std::map<std::string,MValue*> variables;
     std::map<std::string,MValueType*>   types;
     SystemType *system;
@@ -134,6 +135,12 @@ struct Context {
             shadowed_values[name] = old;
         storage->values[name] = value;
     }
+    virtual void bindValueType(std::string name, MValueType* type) {
+        /* TODO MValue *old = getValue(name,false);
+        if(old)
+            shadowed_values[name] = old; */
+        storage->valueTypes[name] = type;
+    }
     void addVariable(std::string name, MValue* value) {
         MValue *old = getVariable(name);
         if(old)
@@ -150,6 +157,12 @@ struct Context {
     virtual MValue* getValue(std::string name, bool fallToVariable = true) {
         auto it = storage->values.find(name);
         if( it != storage->values.end() )
+            return it->second;
+        return 0;
+    }
+    virtual MValueType* getValueType(std::string name) {
+        auto it = storage->valueTypes.find(name);
+        if( it != storage->valueTypes.end() )
             return it->second;
         return 0;
     }

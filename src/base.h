@@ -79,6 +79,11 @@ struct SystemVtable {
     void (*processMsg)(System *s, int msg_id, void *msg_data);
 };
 
+struct SlotReference {
+    System *system;
+    int msg_id;
+};
+
 // direct connection, can be undirect - over network - not a system instance
 // or undirect - horizontal inheritance of interfaces - different vtable
 struct System {
@@ -145,12 +150,9 @@ MY_INLINE char messageQueue_putItem( MessageQueue *q, int msg_id, void *data ) {
     }
 }
 
-typedef struct StdOutSystem {
-    System system;
-    int counter;
-} StdOutSystem;
-
+System* stdin_new(Executor *e);
 System* stdout_new(Executor *e);
+
 
 #ifndef __cplusplus
 char *
@@ -177,8 +179,9 @@ MY_INLINE void __protector__(SystemVtable *vtable) {
     vtable->processMsg(0,0,0);
     system_init(0,0,0);
     executor = 0;
-    StdOutSystem *system1 = (StdOutSystem *) stdout_new(executor);
-    system_putMsg(&system1->system,0,0);
+    stdin_new(executor);
+    stdout_new(executor);
+    system_putMsg(0,0,0);
 }
 
 #ifdef __cplusplus

@@ -174,7 +174,7 @@ int main(int argc, char **argv)
     register_printf(TheModule);
     register_malloc(TheModule);
 
-    stdout_register(&ctx);
+    stdio_register(&ctx);
     for( Statement *s : *list )
         s->codegen(&ctx);
 
