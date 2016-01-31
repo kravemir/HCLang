@@ -22,26 +22,20 @@
  *
  */
 #include "async_io.h"
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <errno.h>
+
 #include <aio.h>
 #include <signal.h>
-#include <fcntl.h>
 
 #define BUF_SIZE 4          /* Size of buffers for read operations */
 #define IO_SIGNAL SIGRTMIN + 8   /* Signal used to notify I/O completion */
 
 struct aioRequest {
     SlotReference callback;
-    int           finished;
     struct aiocb *aiocbp;
 };
 
+static volatile int numOpenReads = 0; // atomic int
 static void                 aioSigHandler(int sig, siginfo_t *si, void *ucontext);
-static struct aioRequest *  aioReadingStart(const char *filename);
-static void                 quitHandler(int sig);
 
 int asyncIoInitialize() {
     struct sigaction sa;
@@ -61,21 +55,25 @@ void aioSigHandler(int sig, siginfo_t *si, void *ucontext)
     struct aioRequest *request = (aioRequest *) si->si_value.sival_ptr;
     int bytes_read = aio_return(request->aiocbp);
 
-    printf("I/O completion signal received %d: %.*s\n", bytes_read, bytes_read, request->aiocbp->aio_buf);
+    // printf("I/O completion signal received %d: %.*s\n", bytes_read, bytes_read, request->aiocbp->aio_buf);
 
     AioCallbackData *callbackData = (AioCallbackData *) malloc(sizeof(AioCallbackData));
     callbackData->count = bytes_read;
     callbackData->data = (char *) request->aiocbp->aio_buf;
 
     system_putMsg(request->callback.system, request->callback.msg_id, callbackData);
+
+    numOpenReads -= 1;
 }
 
+bool asyncIoHasPendingReads() {
+    return numOpenReads > 0;
+}
 
 void asyncIoRead(int filedescriptor, SlotReference callback ) {
     struct aioRequest *request = (aioRequest *) malloc(sizeof(struct aioRequest));
     struct aiocb *aiocbInstance = (aiocb *) malloc(sizeof(struct aiocb));
 
-    request->finished = 0;
     request->callback = callback;
 
     request->aiocbp = aiocbInstance;
@@ -88,5 +86,8 @@ void asyncIoRead(int filedescriptor, SlotReference callback ) {
     request->aiocbp->aio_sigevent.sigev_signo = IO_SIGNAL;
     request->aiocbp->aio_sigevent.sigev_value.sival_ptr = request;
 
-    if (aio_read(request->aiocbp) == -1); // TODO error handle
+    numOpenReads += 1;
+
+    if (aio_read(request->aiocbp) == -1)
+        ; // TODO error handle
 }

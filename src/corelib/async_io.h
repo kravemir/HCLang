@@ -25,14 +25,6 @@
 #ifndef HCLANG_CORELIB_ASYNC_IO_H
 #define HCLANG_CORELIB_ASYNC_IO_H
 
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <errno.h>
-#include <aio.h>
-#include <signal.h>
-#include <fcntl.h>
-
 #include "../base.hpp"
 
 struct AioCallbackData {
@@ -42,6 +34,7 @@ struct AioCallbackData {
 
 int asyncIoInitialize();
 void asyncIoRead(int filedescriptor, SlotReference callback );
+bool asyncIoHasPendingReads();
 
 
 #endif //HCLANG_CORELIB_ASYNC_IO_H

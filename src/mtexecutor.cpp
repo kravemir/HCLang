@@ -29,6 +29,7 @@
 #include <thread>
 
 #include <unistd.h>
+#include <corelib/async_io.h>
 
 // Multi Threaded executor implementation
 
@@ -100,9 +101,12 @@ RESTART:
 
         s = e->queue.donePop();
     }
+
     // TODO: fix active waiting for async io
-    while(!s) s = e->queue.donePop();
-    goto RESTART;
+    if(asyncIoHasPendingReads()) {
+        s = e->queue.pop();
+        goto RESTART;
+    }
 }
 
 static

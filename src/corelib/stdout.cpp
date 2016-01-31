@@ -22,13 +22,12 @@
  *
  */
 #include "stdout.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <ast/declarations/slot.h>
-
-#include "../ast/declarations/system.h"
 #include "async_io.h"
+
+#include <unistd.h>
+
+#include <ast/declarations/slot.h>
+#include <ast/declarations/system.h>
 
 using namespace llvm;
 
