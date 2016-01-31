@@ -55,6 +55,8 @@
 
 #include "base.hpp"
 
+#include "corelib/async_io.h"
+
 using namespace std;
 using namespace llvm;
 
@@ -187,6 +189,8 @@ int main(int argc, char **argv)
     std::cout.flush();
 
     usleep(1000);
+
+    asyncIoInitialize();
 
     // JIT the function, returning a function pointer.
     Function *LF = TheModule->getFunction("main");

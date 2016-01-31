@@ -1,10 +1,8 @@
 # HelloWorld example showing
 
-
 system HelloWorld:
     slot hello():
         stdout.println ! ("HelloWorld")
-
 
 # main procedure is executed when program starts
 procedure main():
@@ -13,6 +11,3 @@ procedure main():
 
     # send hello message to the system
     helloWorld.hello ! ()
-
-    let stdouta = spawn StdOut
-    stdouta.println ! ( "HelloWorld - spawn" )

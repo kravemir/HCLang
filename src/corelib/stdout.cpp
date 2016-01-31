@@ -28,6 +28,7 @@
 #include <ast/declarations/slot.h>
 
 #include "../ast/declarations/system.h"
+#include "async_io.h"
 
 using namespace llvm;
 
@@ -59,19 +60,36 @@ System* stdout_new(Executor *e) {
     return s;
 }
 
+static char buffer [2048], read_n;
+static SlotReference ref;
+
 void stdinSystem_processMsg(System *s, int msg_id, void *data) {
-    int len;
-    char buf[512], *str;
-    SlotReference ref = *(SlotReference*)data;
-    char **ptr;
+    char *str, **ptr;
+
     switch (msg_id) {
         case 0:
-            fgets(buf, 512, stdin);
-            str = (char *) malloc(512);
-            strcpy(str, buf);
-            ptr = (char **) malloc(sizeof(char*));
-            *ptr = str;
-            system_putMsg(ref.system,ref.msg_id,ptr);
+            read_n = 0;
+            ref = *(SlotReference*)data; // TODO, not global
+            asyncIoRead(STDIN_FILENO,{s,1});
+            break;
+        case 1:
+        {
+            AioCallbackData *aioData = (AioCallbackData *) data;
+            memcpy(buffer + read_n, aioData->data, aioData->count);
+            read_n += aioData->count;
+            for(int i = 0; i < read_n; i++) {
+                if(buffer[i] == '\n') {
+                    buffer[i] = 0;
+                    str = (char *) malloc(read_n + 1);
+                    strcpy(str, buffer);
+                    ptr = (char **) malloc(sizeof(char*));
+                    *ptr = str;
+                    system_putMsg(ref.system,ref.msg_id,ptr);
+                    return;
+                }
+            }
+            asyncIoRead(STDIN_FILENO,{s,1});
+        }
             break;
         default:
             printf("wrong message\n");

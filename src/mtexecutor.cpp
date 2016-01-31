@@ -91,6 +91,7 @@ static
 void mtexecutor_threadloop(MTExecutor *e) {
     System *s = e->queue.pop();
 
+RESTART:
     while(s) {
         // current work is too short to utilize multiple threads,
         // debug it with usleep to see it working multithreaded
@@ -99,6 +100,9 @@ void mtexecutor_threadloop(MTExecutor *e) {
 
         s = e->queue.donePop();
     }
+    // TODO: fix active waiting for async io
+    while(!s) s = e->queue.donePop();
+    goto RESTART;
 }
 
 static
