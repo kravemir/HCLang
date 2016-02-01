@@ -42,9 +42,12 @@ MValue* GetChildAST::codegen(Context *ctx, MValueType *type) {
     return child;
 }
 MValueType* VarExpr::calculateType(Context *ctx) {
-    MValue *val = ctx->getValue(str);
-    assert(val);
-    return val->type;
+    //MValue *val = ctx->getValue(str);
+    MValueType *type = ctx->getValueType(str);
+    if(type == 0)
+        type = ctx->getValue(str)->type;
+    assert(type);
+    return type;
 };
 MValue* VarExpr::codegen(Context *ctx, MValueType *type) {
     MValue *v = ctx->getValue(str); // TODO

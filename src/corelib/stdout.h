@@ -19,31 +19,22 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
+ *
  */
-#include "let.h"
+#ifndef HCLANG_CORELIB_STDOUT
+#define HCLANG_CORELIB_STDOUT
 
-#include "printer.h"
+#include <ast/base.h>
+#include "../base.hpp"
 
-void LetStmt::codegen(Context *ctx) {
-    MValueType *t = 0;
-    if( letType )
-        t = letType->codegen(ctx);
+/* TODO move from base
+extern "C" {
 
-    llvm::Value* alloca = ctx->getAlloc(this->allocId);
-    MValue *val;
-    value->preCodegen(ctx);
-    val = value->codegen(ctx, t);
-    Builder.CreateStore(val->value(), alloca);
-    ctx->bindValue(target[0], new MValue(val->type,alloca,true)); // TODO
+System* stdout_new(Executor *e);
+
 }
+ */
 
-void LetStmt::collectAlloc(Context *ctx) {
-    MValueType *t = letType ? letType->codegen(ctx) : value->calculateType(ctx);
-    ctx->bindValueType(this->target[0],t);
-    assert(t);
-    this->allocId = ctx->createAlloc(t);
-}
+void stdio_register(Context *pContext);
 
-void LetStmt::print(Printer &p) const {
-    p.println( target[0] + " = " + value->toString()); // TODO
-}
+#endif // HCLANG_CORELIB_STDOUT

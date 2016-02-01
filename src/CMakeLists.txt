@@ -50,6 +50,9 @@ set ( HCLANG_SRCS
     ast/expressions/binop.cpp
     ast/expressions/call.cpp
     ast/expressions/cond.cpp
+
+    corelib/stdout.cpp
+    corelib/async_io.cpp
 )
 
 set ( HCLANG_HEADERS
@@ -78,6 +81,9 @@ set ( HCLANG_HEADERS
     ast/expressions/binop.h
     ast/expressions/call.h
     ast/expressions/cond.h
+
+    corelib/stdout.h
+    corelib/async_io.h
 )
 
 add_library( HCLang ${HCLANG_SRCS} ${HCLANG_HEADERS} )
@@ -98,6 +104,18 @@ add_executable( pardebug pardebug_main.cpp)
 add_dependencies( pardebug decl.ll )
 target_link_libraries( pardebug HCLang ${llvm_libs} )
 
+# TODO move out
+find_library(AIO_LIBRARY
+        NAMES aio
+        )
+
+if (AIO_LIBRARY)
+    message(STATUS "AIO Library found: ${AIO_LIBRARY}")
+else()
+    message(FATAL_ERROR "AIO Library not found")
+endif()
+
+
 add_executable( astdebug astdebug_main.cpp)
 add_dependencies( astdebug decl.ll )
-target_link_libraries( astdebug HCLang ${llvm_libs} )
+target_link_libraries( astdebug HCLang ${AIO_LIBRARY} ${llvm_libs} rt )

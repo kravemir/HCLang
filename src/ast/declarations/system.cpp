@@ -80,8 +80,11 @@ MValue* SystemType::getChild(MValue *src, std::string name) {
             { 1 },
             "slotref.msgid"
         );
+        val_with_msgid->dump();
         return new MValue(slotTypes[i],val_with_msgid,false);
     }
+
+    assert(0 && "Can't find");
 
     return 0;
 }

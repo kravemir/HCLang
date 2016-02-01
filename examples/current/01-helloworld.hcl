@@ -1,10 +1,8 @@
 # HelloWorld example showing
 
-
 system HelloWorld:
     slot hello():
         stdout.println ! ("HelloWorld")
-
 
 # main procedure is executed when program starts
 procedure main():

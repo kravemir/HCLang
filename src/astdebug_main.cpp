@@ -48,11 +48,14 @@
 #include <llvm/Support/SourceMgr.h>
 #include <vector>
 #include <unistd.h>
+#include <corelib/stdout.h>
 
 #include "frontend/parser.h"
 #include "printer.h"
 
 #include "base.hpp"
+
+#include "corelib/async_io.h"
 
 using namespace std;
 using namespace llvm;
@@ -114,7 +117,7 @@ int main(int argc, char **argv)
         s->print(p);
     std::cerr.flush();
     std::cout.flush();
-    usleep(1000);
+    usleep(10000);
 
     llvm::LLVMContext &llvmContext = llvm::getGlobalContext();
     SMDiagnostic error;
@@ -173,6 +176,7 @@ int main(int argc, char **argv)
     register_printf(TheModule);
     register_malloc(TheModule);
 
+    stdio_register(&ctx);
     for( Statement *s : *list )
         s->codegen(&ctx);
 
@@ -185,6 +189,8 @@ int main(int argc, char **argv)
     std::cout.flush();
 
     usleep(1000);
+
+    asyncIoInitialize();
 
     // JIT the function, returning a function pointer.
     Function *LF = TheModule->getFunction("main");
