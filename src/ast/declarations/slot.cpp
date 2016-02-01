@@ -35,8 +35,22 @@ SlotType* SlotType::create ( Context *ctx, TupleType* argsType, MValueType *retu
 
     ((PointerType*)argsType->llvmType())->getElementType()->dump();
     SlotType * type = new SlotType ( st, argsType, returnType );
+    type->putMsgFn = ctx->storage->module->getFunction("system_putMsg");
+
     return type;
 }
+
+void SlotType::codegenSendTo(MValue *value, MValue *msg) {
+    Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(lctx));
+
+    std::vector<llvm::Value *> aadices({
+                                               Builder.CreateExtractValue(value->value(), {0}, "send.target"),
+                                               Builder.CreateExtractValue(value->value(), {1}, "send.msg"),
+                                               msg ? msg->value() : zero
+                                       });
+    Builder.CreateCall(putMsgFn, aadices);
+}
+
 
 MValueType* SlotTypeAST::codegen ( Context* ctx ) {
     TupleType *argsType = args->codegen ( ctx );
@@ -91,17 +105,14 @@ void SlotDecl::codegen ( Context *_ctx ) {
         } );
         Value *valPtr = Builder.CreateGEP ( ++ ( F->arg_begin() ), args, v.first + "_ptr" );
         auto type = v.second->codegen ( &ctx );
-        if( dynamic_cast<SlotType*>(slotArgsTuple->namedValues[i].second) == 0 )
+        if( (dynamic_cast<SlotType*>(slotArgsTuple->namedValues[i].second) == 0) || true )
             ctx.bindValue ( v.first,new MValue ( { type, Builder.CreateLoad ( valPtr, v.first ) } ) );
         else
             ctx.bindValue ( v.first,new MValue ( { type, valPtr } ) );
     }
 
-    for ( Statement *stmt : *stmts )
-        stmt->collectAlloc ( &ctx );
-
-    for ( Statement *stmt : *stmts )
-        stmt->codegen ( &ctx );
+    stmts->collectAlloc(&ctx);
+    stmts->codegen(&ctx);
 
     Builder.CreateRetVoid();
     s->slots.push_back ( F );

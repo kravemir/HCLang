@@ -19,40 +19,22 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
+ *
  */
-#ifndef HCLANG_AST_UNION_H
-#define HCLANG_AST_UNION_H
+#ifndef HCLANG_CORELIB_STDOUT
+#define HCLANG_CORELIB_STDOUT
 
-#include "ast/base.h"
+#include <ast/base.h>
+#include "../base.hpp"
 
-struct MUnionType : MValueType {
-    MUnionType(std::vector<MValueType*> alternatives, int size):
-        alternatives(alternatives),
-        size(size)
-    {}
+/* TODO move from base
+extern "C" {
 
+System* stdout_new(Executor *e);
 
-    void add(MValueType* t) {}; // TODO
-    virtual llvm::Type* llvmType() const;
+}
+ */
 
-    virtual std::pair<llvm::Value*,MValue*> matchCond(std::string targetName, MValue* src, Context *ctx);
-    virtual MValue* createCast(Context *ctx, MValue *src);
+void stdio_register(Context *pContext);
 
-private:
-    std::vector<MValueType*> alternatives;
-    int size;
-};
-
-class MUnionTypeAST : public MTypeAST {
-public:
-    MUnionTypeAST(std::vector<MTypeAST*> values):
-        values(values)
-    {}
-
-    virtual MValueType* codegen(Context *ctx);
-
-private:
-    std::vector<MTypeAST*> values;
-};
-
-#endif // HCLANG_AST_UNION_H
+#endif // HCLANG_CORELIB_STDOUT

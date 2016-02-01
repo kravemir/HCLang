@@ -27,7 +27,7 @@
 #include <string>
 #include <vector>
 
-#include "lexer.h"
+#include "frontend/lexer.h"
 
 using namespace std;
 

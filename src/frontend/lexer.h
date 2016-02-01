@@ -21,8 +21,8 @@
  * THE SOFTWARE.
  *
  */
-#ifndef HCLANG_LEXER
-#define HCLANG_LEXER
+#ifndef HCLANG_FRONTEND_LEXER
+#define HCLANG_FRONTEND_LEXER
 
 #include <iostream>
 #include <vector>
@@ -96,4 +96,4 @@ void printToken(const Token &t);
 std::string getTokenTypeName(Token::Type t);
 
 
-#endif // HCLANG_LEXER
+#endif // HCLANG_FRONTEND_LEXER

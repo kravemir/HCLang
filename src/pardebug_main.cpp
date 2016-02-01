@@ -24,7 +24,7 @@
 #include <iostream>
 #include <map>
 
-#include "parser.h"
+#include "frontend/parser.h"
 #include "printer.h"
 
 using namespace std;

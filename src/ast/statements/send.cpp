@@ -31,12 +31,10 @@ using namespace llvm;
 #include "llvm/ADT/ArrayRef.h"
 
 void SendStmt::codegen(Context *ctx) {
-    Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(lctx));
-
     if(target[0] == "stdout"  ) { // TODO
         Function *printf_func = ctx->storage->module->getFunction("printf");
         Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(lctx));
-        if( msg == "println" ) {
+        if( target[1] == "println" ) {
             MValue *val = args->get(0)->codegen(ctx);
             Builder.CreateCall(printf_func, val->value());
         } else {
@@ -66,6 +64,8 @@ void SendStmt::codegen(Context *ctx) {
                     var,
                     indices));
     } else {
+        args->preCodegen(ctx);
+        MValue *v_args = args->codegen(ctx);
         MValue *ma = ctx->getVariable(target[0]); // TODO
         for(size_t i = 1; i < target.size(); i++ ) {
             ma = ma->type->getChild(ma,target[i]);
@@ -73,33 +73,7 @@ void SendStmt::codegen(Context *ctx) {
         if(!ma) {
             std::cerr << "Can't find connection of `" << target[0] << "`\n";
         } else {
-            SystemType *system_type = dynamic_cast<SystemType*>(ma->type);
-            SlotType *slot_type = dynamic_cast<SlotType*>(ma->type);
-
-            if(system_type) {
-                args->preCodegen(ctx);
-                MValue *v_args = args->codegen(ctx);
-
-                Function *finit = ctx->storage->module->getFunction("system_putMsg");
-                std::vector<llvm::Value*> aadices({
-                    ma->value(),
-                    ConstantInt::get(lctx,APInt((unsigned)32,(uint64_t)system_type->slotIds[msg])),
-                    v_args ? v_args->value() : zero
-                });
-                Builder.CreateCall(finit,aadices);
-            } else {
-                args->preCodegen(ctx);
-                MValue *v_args = args->codegen(ctx);
-
-                ma->value()->dump();
-                Function *finit = ctx->storage->module->getFunction("system_putMsg");
-                std::vector<llvm::Value*> aadices({
-                    Builder.CreateLoad(Builder.CreateGEP(ma->value(), { (Value*)ConstantInt::get(lctx,APInt(32,(uint64_t)0)), (Value*)ConstantInt::get(lctx,APInt(32,(uint64_t)0))})),
-                    Builder.CreateLoad(Builder.CreateGEP(ma->value(), { (Value*)ConstantInt::get(lctx,APInt(32,(uint64_t)0)), (Value*)ConstantInt::get(lctx,APInt(32,(uint64_t)1))})),
-                    v_args ? v_args->value() : zero
-                });
-                Builder.CreateCall(finit,aadices);
-            }
+            ma->type->codegenSendTo(ma, v_args);
         }
     }
 }

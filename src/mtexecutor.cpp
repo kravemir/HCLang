@@ -29,6 +29,7 @@
 #include <thread>
 
 #include <unistd.h>
+#include <corelib/async_io.h>
 
 // Multi Threaded executor implementation
 
@@ -91,6 +92,7 @@ static
 void mtexecutor_threadloop(MTExecutor *e) {
     System *s = e->queue.pop();
 
+RESTART:
     while(s) {
         // current work is too short to utilize multiple threads,
         // debug it with usleep to see it working multithreaded
@@ -98,6 +100,12 @@ void mtexecutor_threadloop(MTExecutor *e) {
         system_executeWork(s);
 
         s = e->queue.donePop();
+    }
+
+    // TODO: fix active waiting for async io
+    if(asyncIoHasPendingReads()) {
+        s = e->queue.pop();
+        goto RESTART;
     }
 }
 

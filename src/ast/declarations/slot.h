@@ -38,9 +38,14 @@ private:
         returnType(returnType)
     {}
 
+
+public:
+    virtual void codegenSendTo(MValue *value, MValue *msg) override;
+
 public:
     TupleType* const argsTupleType;
     MValueType* const returnType;
+    llvm::Function *putMsgFn; // TODO
 };
 
 class SlotTypeAST : public MTypeAST {

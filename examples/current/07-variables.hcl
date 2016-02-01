@@ -12,13 +12,13 @@ procedure main():
     for str in strs:
         if str_num < 1:
             var testAlloca = "1st string: " + str
-            stdout ! println( testAlloca )
+            stdout.println ! ( testAlloca )
         elif str_num < 2:
             var testAlloca = "2nd string: " + str
-            stdout ! println( testAlloca )
+            stdout.println ! ( testAlloca )
         else:
             var testAlloca = "X_" + str + "_X"
-            stdout ! println( testAlloca )
+            stdout.println ! ( testAlloca )
 
 
         # update content of variables
@@ -26,4 +26,4 @@ procedure main():
         str_num = str_num + 1
 
         # debug print results
-        stdout ! printfln( "Total %d strings printed, concat: %s", str_num, str_concat )
+        stdout.printfln ! ( "Total %d strings printed, concat: %s", str_num, str_concat )

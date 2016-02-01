@@ -31,6 +31,7 @@ void LetStmt::codegen(Context *ctx) {
 
     llvm::Value* alloca = ctx->getAlloc(this->allocId);
     MValue *val;
+    value->preCodegen(ctx);
     val = value->codegen(ctx, t);
     Builder.CreateStore(val->value(), alloca);
     ctx->bindValue(target[0], new MValue(val->type,alloca,true)); // TODO
@@ -38,6 +39,7 @@ void LetStmt::codegen(Context *ctx) {
 
 void LetStmt::collectAlloc(Context *ctx) {
     MValueType *t = letType ? letType->codegen(ctx) : value->calculateType(ctx);
+    ctx->bindValueType(this->target[0],t);
     assert(t);
     this->allocId = ctx->createAlloc(t);
 }

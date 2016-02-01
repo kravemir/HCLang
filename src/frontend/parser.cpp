@@ -672,7 +672,6 @@ MTypeAST* Parser::arrayTypeTrailer(MTypeAST *type) {
 
 MTupleTypeAST* Parser::tupleTypeDecl() {
     if(!expectConsume(Token::OPEN_PARENTHESIS)) return 0;
-    MValueType* t;
     std::vector<MTypeAST*> types;
     std::vector<std::pair<std::string,MTypeAST*>> namedValues;
     while( type() != Token::CLOSE_PARENTHESIS ) {

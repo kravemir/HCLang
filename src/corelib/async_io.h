@@ -19,40 +19,22 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
+ *
  */
-#ifndef HCLANG_AST_UNION_H
-#define HCLANG_AST_UNION_H
 
-#include "ast/base.h"
+#ifndef HCLANG_CORELIB_ASYNC_IO_H
+#define HCLANG_CORELIB_ASYNC_IO_H
 
-struct MUnionType : MValueType {
-    MUnionType(std::vector<MValueType*> alternatives, int size):
-        alternatives(alternatives),
-        size(size)
-    {}
+#include "../base.hpp"
 
-
-    void add(MValueType* t) {}; // TODO
-    virtual llvm::Type* llvmType() const;
-
-    virtual std::pair<llvm::Value*,MValue*> matchCond(std::string targetName, MValue* src, Context *ctx);
-    virtual MValue* createCast(Context *ctx, MValue *src);
-
-private:
-    std::vector<MValueType*> alternatives;
-    int size;
+struct AioCallbackData {
+    int count;
+    char *data;
 };
 
-class MUnionTypeAST : public MTypeAST {
-public:
-    MUnionTypeAST(std::vector<MTypeAST*> values):
-        values(values)
-    {}
+int asyncIoInitialize();
+void asyncIoRead(int filedescriptor, SlotReference callback );
+bool asyncIoHasPendingReads();
 
-    virtual MValueType* codegen(Context *ctx);
 
-private:
-    std::vector<MTypeAST*> values;
-};
-
-#endif // HCLANG_AST_UNION_H
+#endif //HCLANG_CORELIB_ASYNC_IO_H

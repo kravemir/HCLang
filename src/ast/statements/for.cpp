@@ -27,17 +27,15 @@ using namespace llvm;
 void ForStmt::codegen(Context *ctx) {
     Function *TheFunction = Builder.GetInsertBlock()->getParent();
 
-    // Create blocks for the then and else cases.  Insert the 'then' block at the
-    // end of the function.
-    BasicBlock *condBB = BasicBlock::Create(getGlobalContext(), "cond");
-    BasicBlock *forBB = BasicBlock::Create(getGlobalContext(), "for");
-    BasicBlock *endBB = BasicBlock::Create(getGlobalContext(), "endfor");
+    BasicBlock *condBB = BasicBlock::Create(getGlobalContext(), "for.condition");
+    BasicBlock *forBB = BasicBlock::Create(getGlobalContext(), "for.content");
+    BasicBlock *endBB = BasicBlock::Create(getGlobalContext(), "for.end");
 
     assert( iPtr && "Probably collectAlloc wasn't called" );
+
     Builder.CreateStore( ConstantInt::get(lctx,APInt((unsigned)64,(uint64_t)0)), iPtr);
     MValue *val = this->inval->codegen(ctx);
     Builder.CreateBr(condBB);
-
 
     TheFunction->getBasicBlockList().push_back(condBB);
     Builder.SetInsertPoint(condBB);
@@ -47,8 +45,8 @@ void ForStmt::codegen(Context *ctx) {
     TheFunction->getBasicBlockList().push_back(forBB);
     Builder.SetInsertPoint(forBB);
     ctx->bindValue(target_name, val->type->getArrayChild(val,Builder.CreateLoad(iPtr)));
-    for( auto *s : *stmts )
-        s->codegen(ctx);
+
+    stmts->codegen(ctx);
     Builder.CreateStore(
             Builder.CreateAdd(Builder.CreateLoad(iPtr),ConstantInt::get(lctx,APInt((unsigned)64,(uint64_t)1))),
             iPtr
@@ -61,7 +59,6 @@ void ForStmt::codegen(Context *ctx) {
 
 void ForStmt::collectAlloc ( Context* ctx ) {
     iPtr = Builder.CreateAlloca(Type::getInt64Ty(lctx),0,"for.i.alloca");
-    for( auto *s : *stmts )
-        s->collectAlloc(ctx);
+    stmts->collectAlloc(ctx);
 }
 
