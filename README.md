@@ -17,13 +17,13 @@ The language is still under heavy development. Roadmap is described in [separate
 ### Basics
 Clone, compile and execute examples:
 ```bash
-git clone <URL> HCLang
-cd HCLang/src
-mkdir build
-cd build
-cmake ..
-make -j2
-./astdebug ../../examples/v0.1/01-helloworld.hcl
+git clone https://github.com/kravemir/HCLang.git HCLang
+mkdir HCLang/build
+cd HCLang/build/
+cmake .. -DCMAKE_CXX_COMPILER=clang++-3.7 -DCMAKE_C_COMPILER=clang-3.7
+make -j4
+cd src
+./astdebug ../../examples/current/01-helloworld.hcl
 ```
 
 Tested on ArchLinux 64-bit with Clang v3.7.0-4, LLVM v3.7.0-4 and CMake v3.3.2-3.
