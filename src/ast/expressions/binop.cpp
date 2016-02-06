@@ -39,6 +39,11 @@ MValue* BinaryOpAST::codegen(Context *ctx, MValueType *type) {
             res = Builder.CreateAdd(l->value(), r->value()); break;
         case Token::MINUS:
             res = Builder.CreateSub(l->value(), r->value()); break;
+        case Token::MULTIPLY:
+            res = Builder.CreateMul(l->value(), r->value()); break;
+        case Token::DIVIDE:
+            // TODO: divide type
+            res = Builder.CreateSDiv(l->value(), r->value()); break;
         case Token::LESS:
             res = Builder.CreateICmpULT(l->value(), r->value()); break;
         case Token::GREATER:

@@ -476,7 +476,17 @@ Q_START:
 }
 
 MValueAST*   Parser::mult() {
-    return atom_expr();
+    MValueAST* ast = atom_expr();
+    Q_START:
+    if(tryConsume(Token::MULTIPLY)) {
+        ast = new BinaryOpAST(Token::MULTIPLY,ast, atom_expr());
+        goto Q_START;
+    }
+    if(tryConsume(Token::DIVIDE)) {
+        ast = new BinaryOpAST(Token::DIVIDE,ast, atom_expr());
+        goto Q_START;
+    }
+    return ast;
 }
 
 MValueAST*  Parser::atom_expr() {
