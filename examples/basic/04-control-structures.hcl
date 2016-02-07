@@ -1,0 +1,10 @@
+# Control structures example
+#  - for
+#  - while
+
+procedure main():
+    let numbers = [ 1, 2, 3, 5, 8, 13, 21, 34 ]
+    for n in numbers:
+        stdout.printfln( "%d", 2 )
+
+# TODO: printfln -> int to string

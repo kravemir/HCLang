@@ -1,4 +1,4 @@
-# systems state, system communication
+# system state example
 
 
 system Counter:

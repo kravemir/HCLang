@@ -1,4 +1,6 @@
-# HelloWorld example showing
+# HelloWorld example showing:
+#  - system instantiation
+#  - message sending
 
 system HelloWorld:
     slot hello():
