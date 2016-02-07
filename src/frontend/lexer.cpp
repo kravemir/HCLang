@@ -243,7 +243,7 @@ Q_CONTINUE:
 
     switch( *ch ) {
     case '#':
-        while(*(++ch) != '\n');
+        while(*(++ch) != '\n' && *ch );
         ch++;
         goto Q_NEWLINE;
     case '<':
