@@ -98,6 +98,9 @@ extern "C" {
     Executor *executor;
 }
 
+extern unsigned char decl_ll[];
+extern unsigned int decl_ll_len;
+
 int main(int argc, char **argv)
 {
     InitializeNativeTarget();
@@ -124,7 +127,12 @@ int main(int argc, char **argv)
     //Module *m = parseIRFile("decl.ll", error, llvmContext);
     //std::unique_ptr<llvm::Module> Owner = llvm::make_unique<llvm::Module>("my cool jit", llvmContext);
     //std::unique_ptr<llvm::Module> Owner = std::unique_ptr<llvm::Module>(m);
-    std::unique_ptr<llvm::Module> Owner = parseIRFile("decl.ll", error, llvmContext);
+    //std::unique_ptr<llvm::Module> Owner = parseIRFile("decl.ll", error, llvmContext);
+    std::unique_ptr<llvm::Module> Owner = parseIR(
+        MemoryBufferRef(std::string((const char*)decl_ll,decl_ll_len),"in-binary decl.ll"),
+        error,
+        llvmContext
+    );
     Module *TheModule = Owner.get();
   /*TheModule->addModuleFlag(Module::Warning, "Debug Info Version",
                            DEBUG_METADATA_VERSION);*/

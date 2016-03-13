@@ -3,7 +3,8 @@ cmake_minimum_required (VERSION 2.8)
 project( HCLang )
 
 # USING c++11 and includes
-add_definitions( -Wall -pedantic -g --std=c++11 -fPIC )
+set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++11 -fPIC" )
+set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -pedantic -g" )
 include_directories(${HCLang_SOURCE_DIR}/)
 
 # LLVM CONFIG
@@ -15,7 +16,7 @@ message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
-llvm_map_components_to_libnames(llvm_libs core mcjit native irreader)
+llvm_map_components_to_libnames(llvm_libs core mcjit native irreader all)
 
 
 # SOURCES
@@ -86,22 +87,28 @@ set ( HCLANG_HEADERS
     corelib/async_io.h
 )
 
-add_library( HCLang ${HCLANG_SRCS} ${HCLANG_HEADERS} )
+add_library( HCLang STATIC ${HCLANG_SRCS} ${HCLANG_HEADERS} )
 
 
 # AST codegen debug
 
-add_custom_target(
-    decl.ll
+add_custom_command(
+    OUTPUT decl.ll
     COMMAND ${CMAKE_C_COMPILER} -cc1 -emit-llvm -o decl.ll ${CMAKE_CURRENT_SOURCE_DIR}/base.h -DEXPORTLL
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/base.h
+)
+
+add_custom_command(
+    OUTPUT decl.cpp
+    COMMAND xxd -i decl.ll decl.cpp
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/decl.ll
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 add_executable( lexdebug lexdebug_main.cpp)
 target_link_libraries( lexdebug HCLang ${llvm_libs} )
 
 add_executable( pardebug pardebug_main.cpp)
-add_dependencies( pardebug decl.ll )
 target_link_libraries( pardebug HCLang ${llvm_libs} )
 
 # TODO move out
@@ -116,6 +123,5 @@ else()
 endif()
 
 
-add_executable( astdebug astdebug_main.cpp)
-add_dependencies( astdebug decl.ll )
-target_link_libraries( astdebug HCLang ${AIO_LIBRARY} ${llvm_libs} rt )
+add_executable( astdebug astdebug_main.cpp decl.cpp)
+target_link_libraries( astdebug HCLang ${AIO_LIBRARY} ${llvm_libs} rt pthread )
