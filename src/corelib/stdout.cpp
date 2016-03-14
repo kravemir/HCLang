@@ -149,4 +149,12 @@ void stdio_register(Context *ctx) {
                 StringType::create(ctx)
         ));
     }
+    {
+        Function *F = ctx->storage->module->getFunction("my_sprintf");
+
+        MValueType *rt = StringType::create(ctx);
+        auto *ft = new MFunctionType(rt);
+        ft->retType = StringType::create(ctx);
+        ctx->bindValue("sprintf", new MValue({ft, F}));
+    }
 }

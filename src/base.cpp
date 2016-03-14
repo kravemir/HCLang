@@ -24,6 +24,7 @@
 #include "base.hpp"
 
 #include <stdio.h>
+#include <string.h>
 
 extern "C" {
 
@@ -63,6 +64,17 @@ void system_putMsg(System *s, int msg_id, void *data ) {
     if(messageQueue_putItem(&s->queue, msg_id, data)) {
         s->executor->putWork(s->executor, s);
     }
+}
+
+const char * my_sprintf( const char *format, ... ) {
+    char buffer[1024];
+    va_list args;
+    va_start (args, format);
+    vsprintf (buffer,format, args);
+    va_end (args);
+    char* str = (char*) malloc(sizeof(buffer));
+    strcpy(str,buffer);
+    return str;
 }
 
 }

@@ -153,6 +153,8 @@ MY_INLINE char messageQueue_putItem( MessageQueue *q, int msg_id, void *data ) {
 System* stdin_new(Executor *e);
 System* stdout_new(Executor *e);
 
+const char * my_sprintf( const char *format,... );
+
 
 #ifndef __cplusplus
 char *
@@ -182,6 +184,7 @@ MY_INLINE void __protector__(SystemVtable *vtable) {
     stdin_new(executor);
     stdout_new(executor);
     system_putMsg(0,0,0);
+    my_sprintf(0,0);
 }
 
 #ifdef __cplusplus
