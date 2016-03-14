@@ -31,50 +31,17 @@ using namespace llvm;
 #include "llvm/ADT/ArrayRef.h"
 
 void SendStmt::codegen(Context *ctx) {
-    if(target[0] == "stdout"  ) { // TODO
-        Function *printf_func = ctx->storage->module->getFunction("printf");
-        Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(lctx));
-        if( target[1] == "println" ) {
-            MValue *val = args->get(0)->codegen(ctx);
-            Builder.CreateCall(printf_func, val->value());
-        } else {
-            std::vector<Value*> argsv;
-            for( size_t i = 0; i < args->size(); i++ ) {
-                args->get(i)->preCodegen(ctx);
-            }
-            for( size_t i = 0; i < args->size(); i++ ) {
-                argsv.push_back(args->get(i)->codegen(ctx)->value());
-            }
-            Builder.CreateCall(printf_func,argsv);
-        }
-
-
-        Constant *format_const = ConstantDataArray::getString(lctx, "\n" );
-        GlobalVariable *var = new GlobalVariable(
-                *ctx->storage->module,
-                llvm::ArrayType::get(llvm::IntegerType::get(lctx, 8), 2),
-                true,
-                llvm::GlobalValue::PrivateLinkage,
-                format_const,
-                ".str"
-            );
-        std::vector<llvm::Constant*> indices(2,zero);
-        Builder.CreateCall(printf_func, ConstantExpr::getGetElementPtr(
-                    ArrayType::get(llvm::IntegerType::get(lctx, 8), 2),
-                    var,
-                    indices));
+    args->preCodegen(ctx);
+    MValue *v_args = args->codegen(ctx);
+    MValue *ma = ctx->getVariable(target[0]); // TODO
+    for(size_t i = 1; i < target.size(); i++ ) {
+        assert(ma || "Error ma");
+        ma = ma->type->getChild(ma,target[i]);
+    }
+    if(!ma) {
+        std::cerr << "Can't find connection of `" << target[0] << "`\n";
     } else {
-        args->preCodegen(ctx);
-        MValue *v_args = args->codegen(ctx);
-        MValue *ma = ctx->getVariable(target[0]); // TODO
-        for(size_t i = 1; i < target.size(); i++ ) {
-            ma = ma->type->getChild(ma,target[i]);
-        }
-        if(!ma) {
-            std::cerr << "Can't find connection of `" << target[0] << "`\n";
-        } else {
-            ma->type->codegenSendTo(ma, v_args);
-        }
+        ma->type->codegenSendTo(ma, v_args);
     }
 }
 

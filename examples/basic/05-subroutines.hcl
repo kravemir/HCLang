@@ -4,4 +4,4 @@ procedure main():
     let x = 3
     let y = 5
 
-    stdout.printfln ! ( "min(x,y) = %d", min(x,y) )
+    stdout.println ! ( sprintf("min(x,y) = %d", min(x,y)) )

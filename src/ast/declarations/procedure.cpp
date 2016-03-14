@@ -20,6 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#include <ast/statements/let.h>
 #include "procedure.h"
 
 #include "ast/types/tuple.h"
@@ -56,6 +57,15 @@ void ProcedureDecl::codegen(Context *_ctx) {
         auto t = v.second->codegen(_ctx);
         args_types.push_back( {v.first,t} );
         args_llvmtypes.push_back(t->llvmType());
+    }
+
+    if(this->name == "main") {
+        Path p;
+        p.push_back("stdout");
+        this->stmts->insert(
+                this->stmts->begin(),
+                new LetStmt(p, 0, new SpawnExpr("StdOut", new TupleAST(new MValueList, new MValueMap)))
+        );
     }
 
     if( async == false ) {

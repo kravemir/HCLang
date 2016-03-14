@@ -26,4 +26,4 @@ procedure main():
         str_num = str_num + 1
 
         # debug print results
-        stdout.printfln ! ( "Total %d strings printed, concat: %s", str_num, str_concat )
+        stdout.println ! ( sprintf("Total %d strings printed, concat: %s", str_num, str_concat) )
