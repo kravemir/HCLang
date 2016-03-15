@@ -225,11 +225,45 @@ struct IntType : MValueType {
         return new IntType(llvm::Type::getInt64Ty(ctx->storage->module->getContext()));
     }
 };
+
+struct MethodReferenceType : MValueType {
+    static MethodReferenceType* create( MValueType *retType, llvm::FunctionType *ft ) {
+        llvm::Type* lt = llvm::StructType::create({llvm::Type::getInt8PtrTy( lctx ),ft});
+        return new MethodReferenceType(lt,retType);
+    }
+
+    MValue* createValue(MValue *src, llvm::Value *functionPtr) {
+        llvm::Value *val_with_instance = Builder.CreateInsertValue(
+        llvm::UndefValue::get(llvmType()),
+                src->value(),
+                { 0 },
+                "methodref.instance"
+        );
+        llvm::Value *val_with_method = Builder.CreateInsertValue(
+                val_with_instance,
+                functionPtr,
+                { 1 },
+                "methodref.method"
+        );
+        val_with_method->dump();
+        return new MValue(this,val_with_method,false);
+    }
+
+
+private:
+    MethodReferenceType(llvm::Type* _llvmType, MValueType *retType):
+        MValueType(_llvmType,true,retType)
+    {}
+};
+
 struct StringType : MValueType {
-    StringType(llvm::Type* type) : MValueType(type) { assert(type); };
+    llvm::Function *F;
 
     static StringType* create(Context *ctx) {
-        return new StringType(llvm::Type::getInt8PtrTy(ctx->storage->module->getContext()));
+        return new StringType(
+                llvm::Type::getInt8PtrTy(ctx->storage->module->getContext()),
+                ctx->storage->module->getFunction("my_sprintf")
+        );
     }
 
     virtual MValue* createCast ( Context* ctx, MValue* src ) {
@@ -237,6 +271,24 @@ struct StringType : MValueType {
         assert( dynamic_cast<StringType*>(src->type) );
         return src;
     }
+
+    virtual MValue* getChild(MValue *src, std::string name) {
+        if(name == "format") {
+            MethodReferenceType *mrt = MethodReferenceType::create(this,F->getFunctionType());
+            return mrt->createValue(src,F);
+        }
+        return 0;
+    }
+
+    virtual MValueType* getChildType(std::string name) {
+        if(name == "format") {
+            return MethodReferenceType::create(this,F->getFunctionType());
+        }
+        return 0;
+    }
+
+private:
+    StringType(llvm::Type* type, llvm::Function *F) : MValueType(type), F(F) { assert(type); };
 };
 struct VoidType : MValueType {
     VoidType(llvm::Type* type) : MValueType(type) { assert(type); };
@@ -276,7 +328,7 @@ public:
         if( name == "int" )
             return new IntType(llvm::Type::getInt64Ty(ctx->storage->module->getContext()));
         else if( name == "String" )
-            return new StringType(llvm::Type::getInt8PtrTy(ctx->storage->module->getContext()));
+            return StringType::create(ctx);
         return ctx->storage->types[name];
     };
 

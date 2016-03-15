@@ -6,7 +6,7 @@ procedure main():
     let a = 7
     let b = 5
 
-    stdout.println ! ( sprintf("a + b = %d", a + b) )
-    stdout.println ! ( sprintf("a - b = %d", a - b) )
-    stdout.println ! ( sprintf("a * b = %d", a * b) )
-    stdout.println ! ( sprintf("a / b = %d", a / b) )
+    stdout.println ! ( "a + b = %d".format(a + b) )
+    stdout.println ! ( "a - b = %d".format(a - b) )
+    stdout.println ! ( "a * b = %d".format(a * b) )
+    stdout.println ! ( "a / b = %d".format(a / b) )

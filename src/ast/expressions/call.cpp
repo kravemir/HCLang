@@ -122,7 +122,19 @@ MValue* CallExpr::codegen(Context *ctx, MValueType *type) {
             std::cerr << "Can't use as function\n" << std::endl;
             assert( 0 );
         }
-        MValue *val = new MValue({ft->callReturnType(), Builder.CreateCall(v->value(), argsV, "calltmp")});
+        MValue *val;
+        MethodReferenceType *mrt = dynamic_cast<MethodReferenceType*>(ft);
+        if(mrt) {
+            argsV.insert(argsV.begin(),Builder.CreateExtractValue(v->value(),{0}));
+            val = new MValue({
+                    ft->callReturnType(),
+                    Builder.CreateCall(
+                            Builder.CreateExtractValue(v->value(),{1}),
+                            argsV
+                    )
+            });
+        } else
+            val = new MValue({ft->callReturnType(), Builder.CreateCall(v->value(), argsV, "calltmp")});
         if (type)
             return type->createCast(ctx, val);
         return val;

@@ -106,7 +106,7 @@ MValue* StringAST::codegen(Context *ctx, MValueType *type) {
 
 
     std::vector<llvm::Constant*> indices(2,zero);
-    MValue *vval = new MValue({new StringType(llvm::Type::getInt8PtrTy(ctx->storage->module->getContext())),ConstantExpr::getGetElementPtr(ltype, var, indices)});
+    MValue *vval = new MValue({StringType::create(ctx),ConstantExpr::getGetElementPtr(ltype, var, indices)});
     if(type)
         vval = type->createCast(ctx,vval);
     return vval;

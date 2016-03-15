@@ -63,7 +63,7 @@ MValue* BinaryOpAST::codegen(Context *ctx, MValueType *type) {
         std::vector<llvm::Value*> aadices({
             l->value(), r->value()
         });
-        return new MValue({new StringType(llvm::Type::getInt8PtrTy(ctx->storage->module->getContext())),Builder.CreateCall(fconcat,aadices)});
+        return new MValue({StringType::create(ctx),Builder.CreateCall(fconcat,aadices)});
     }
     assert(0);
     return 0;
