@@ -20,31 +20,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_AST_H
-#define HCLANG_AST_AST_H
+#ifndef HCLANG_AST_EXPRESSIONS_GETCHILD_H
+#define HCLANG_AST_EXPRESSIONS_GETCHILD_H
 
-#include "base.h"
+#include <ast/base.h>
 
-#include "declarations/system.h"
-#include "declarations/slot.h"
-#include "declarations/procedure.h"
-#include "declarations/function.h"
+class GetChildAST : public MValueAST {
+public:
+    GetChildAST(MValueAST *val, std::string name):
+            val(val),
+            name(name)
+    {}
 
-#include "types/array.h"
-#include "types/tuple.h"
-#include "types/union.h"
-#include "types/string.h"
+    virtual MValueType* calculateType(Context *ctx);
+    virtual MValue* codegen(Context *ctx, MValueType *type = 0);
+    virtual std::string toString() const { return val->toString() + "." + name; }
 
-#include "statements/let.h"
-#include "statements/send.h"
-#include "statements/expr.h"
-#include "statements/return.h"
-#include "statements/for.h"
-#include "statements/var.h"
+private:
+    MValueAST *val;
+    std::string name;
+};
 
-#include "expressions/binop.h"
-#include "expressions/call.h"
-#include "expressions/cond.h"
-#include "expressions/getchild.h"
-
-#endif // HCLANG_AST_AST_H
+#endif //HCLANG_AST_EXPRESSIONS_GETCHILD_H

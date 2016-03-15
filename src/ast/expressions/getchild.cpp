@@ -20,31 +20,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_AST_H
-#define HCLANG_AST_AST_H
+#include "getchild.h"
 
-#include "base.h"
-
-#include "declarations/system.h"
-#include "declarations/slot.h"
-#include "declarations/procedure.h"
-#include "declarations/function.h"
-
-#include "types/array.h"
-#include "types/tuple.h"
-#include "types/union.h"
-#include "types/string.h"
-
-#include "statements/let.h"
-#include "statements/send.h"
-#include "statements/expr.h"
-#include "statements/return.h"
-#include "statements/for.h"
-#include "statements/var.h"
-
-#include "expressions/binop.h"
-#include "expressions/call.h"
-#include "expressions/cond.h"
-#include "expressions/getchild.h"
-
-#endif // HCLANG_AST_AST_H
+MValueType* GetChildAST::calculateType(Context *ctx) {
+    MValueType *t = val->calculateType(ctx);
+    assert(t);
+    return t->getChildType(name);
+};
+MValue* GetChildAST::codegen(Context *ctx, MValueType *type) {
+    MValue *target = val->codegen(ctx);
+    MValue *child = target->getChild(name);
+    assert(child);
+    return child;
+}

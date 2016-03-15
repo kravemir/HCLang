@@ -104,6 +104,9 @@ void CallExpr::preCodegen(Context *ctx) {
 
     }
 }
+
+#include "ast/types/string.h"
+
 MValue* CallExpr::codegen(Context *ctx, MValueType *type) {
     MValue *v = val->codegen(ctx);
     MValueType *ft = v->type;

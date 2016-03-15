@@ -200,24 +200,6 @@ struct Context {
     std::vector<llvm::Value*> allocas;
 };
 
-struct SystemContext : Context {
-    SystemType *shadowed_system;
-    std::string oldprefix;
-
-
-    SystemContext(Context *parent, std::string name, SystemType *type): Context(parent) {
-        shadowed_system = storage->system;
-        storage->system = type;
-        oldprefix = storage->prefix;
-        storage->prefix += "s" + name + "_";
-    }
-    ~SystemContext() {
-        storage->system = shadowed_system;
-        storage->prefix = oldprefix;
-    }
-};
-
-
 struct IntType : MValueType {
     IntType(llvm::Type* type) : MValueType(type) { assert(type); };
 
@@ -226,70 +208,6 @@ struct IntType : MValueType {
     }
 };
 
-struct MethodReferenceType : MValueType {
-    static MethodReferenceType* create( MValueType *retType, llvm::FunctionType *ft ) {
-        llvm::Type* lt = llvm::StructType::create({llvm::Type::getInt8PtrTy( lctx ),ft});
-        return new MethodReferenceType(lt,retType);
-    }
-
-    MValue* createValue(MValue *src, llvm::Value *functionPtr) {
-        llvm::Value *val_with_instance = Builder.CreateInsertValue(
-        llvm::UndefValue::get(llvmType()),
-                src->value(),
-                { 0 },
-                "methodref.instance"
-        );
-        llvm::Value *val_with_method = Builder.CreateInsertValue(
-                val_with_instance,
-                functionPtr,
-                { 1 },
-                "methodref.method"
-        );
-        val_with_method->dump();
-        return new MValue(this,val_with_method,false);
-    }
-
-
-private:
-    MethodReferenceType(llvm::Type* _llvmType, MValueType *retType):
-        MValueType(_llvmType,true,retType)
-    {}
-};
-
-struct StringType : MValueType {
-    llvm::Function *F;
-
-    static StringType* create(Context *ctx) {
-        return new StringType(
-                llvm::Type::getInt8PtrTy(ctx->storage->module->getContext()),
-                ctx->storage->module->getFunction("my_sprintf")
-        );
-    }
-
-    virtual MValue* createCast ( Context* ctx, MValue* src ) {
-        // don't cast, check type
-        assert( dynamic_cast<StringType*>(src->type) );
-        return src;
-    }
-
-    virtual MValue* getChild(MValue *src, std::string name) {
-        if(name == "format") {
-            MethodReferenceType *mrt = MethodReferenceType::create(this,F->getFunctionType());
-            return mrt->createValue(src,F);
-        }
-        return 0;
-    }
-
-    virtual MValueType* getChildType(std::string name) {
-        if(name == "format") {
-            return MethodReferenceType::create(this,F->getFunctionType());
-        }
-        return 0;
-    }
-
-private:
-    StringType(llvm::Type* type, llvm::Function *F) : MValueType(type), F(F) { assert(type); };
-};
 struct VoidType : MValueType {
     VoidType(llvm::Type* type) : MValueType(type) { assert(type); };
 };
@@ -324,13 +242,7 @@ public:
         name(name)
     {}
 
-    virtual MValueType* codegen(Context *ctx) {
-        if( name == "int" )
-            return new IntType(llvm::Type::getInt64Ty(ctx->storage->module->getContext()));
-        else if( name == "String" )
-            return StringType::create(ctx);
-        return ctx->storage->types[name];
-    };
+    virtual MValueType* codegen(Context *ctx);
 
 private:
     std::string name;
@@ -359,22 +271,6 @@ private:
     std::string str;
 };
 
-class GetChildAST : public MValueAST {
-public:
-    GetChildAST(MValueAST *val, std::string name):
-        val(val),
-        name(name)
-    {}
-
-    virtual MValueType* calculateType(Context *ctx);
-    virtual MValue* codegen(Context *ctx, MValueType *type = 0);
-    virtual std::string toString() const { return val->toString() + "." + name; }
-
-private:
-    MValueAST *val;
-    std::string name;
-};
-
 class SpawnExpr : public MValueAST {
 public:
     SpawnExpr(std::string str, TupleAST *spawnArgs);
@@ -400,19 +296,6 @@ public:
 
 private:
     uint64_t val;
-};
-class StringAST : public MValueAST {
-public:
-    StringAST(std::string val);
-
-    virtual MValueType* calculateType(Context *ctx) {
-        return StringType::create(ctx);
-    };
-    virtual MValue* codegen(Context *ctx, MValueType *type = 0);
-    virtual std::string toString() const;
-
-private:
-    std::string val;
 };
 
 typedef std::vector<MValueAST*> MValueList;
@@ -450,26 +333,6 @@ public:
 private:
     std::string name;
     MTypeAST *type;
-};
-
-class FunctionDecl : public Statement {
-public:
-    FunctionDecl( std::string name, MTupleTypeAST *args, StatementList *list, MTypeAST *retType ):
-        name(name),
-        args(args),
-        stmts(list),
-        retType(retType)
-    {}
-
-    virtual void codegen(Context *ctx);
-    virtual void collectAlloc ( Context* ctx ) {}
-
-    virtual void print(Printer &p) const;
-private:
-    std::string name;
-    MTupleTypeAST *args;
-    StatementList *stmts;
-    MTypeAST *retType;
 };
 
 class ImportStmt : public Statement {

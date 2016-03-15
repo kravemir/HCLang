@@ -66,4 +66,21 @@ private:
     StatementList *stmts;
 };
 
+struct SystemContext : Context {
+    SystemType *shadowed_system;
+    std::string oldprefix;
+
+
+    SystemContext(Context *parent, std::string name, SystemType *type): Context(parent) {
+        shadowed_system = storage->system;
+        storage->system = type;
+        oldprefix = storage->prefix;
+        storage->prefix += "s" + name + "_";
+    }
+    ~SystemContext() {
+        storage->system = shadowed_system;
+        storage->prefix = oldprefix;
+    }
+};
+
 #endif // HCLANG_AST_SYSTEM_H

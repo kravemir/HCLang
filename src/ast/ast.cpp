@@ -30,17 +30,7 @@ using namespace llvm;
 IRBuilder<> Builder(getGlobalContext());
 LLVMContext &lctx = getGlobalContext();
 
-MValueType* GetChildAST::calculateType(Context *ctx) {
-    MValueType *t = val->calculateType(ctx);
-    assert(t);
-    return t->getChildType(name);
-};
-MValue* GetChildAST::codegen(Context *ctx, MValueType *type) {
-    MValue *target = val->codegen(ctx);
-    MValue *child = target->getChild(name);
-    assert(child);
-    return child;
-}
+
 MValueType* VarExpr::calculateType(Context *ctx) {
     //MValue *val = ctx->getValue(str);
     MValueType *type = ctx->getValueType(str);
@@ -203,42 +193,6 @@ void TypeDecl::codegen(Context *ctx) {
     ctx->storage->types[name] = t;
     ctx->bindValue(name,t->createConstructor(ctx));
 }
-void FunctionDecl::codegen(Context *_ctx) {
-    Context ctx (_ctx);
-    std::vector<llvm::Type*> args;
-    std::vector<MValueType*> types;
-    for( size_t i = 0; i < this->args->namedValues.size(); i++ ) {
-        auto v = this->args->namedValues[i];
-        auto type = v.second->codegen(&ctx);
-        args.push_back(type->llvmType());
-        types.push_back(type);
-    }
-
-    MValueType *rt = retType->codegen(&ctx);
-    llvm::FunctionType *FT = llvm::FunctionType::get(rt->llvmType(), args, false);
-
-    Function *F = Function::Create(FT, Function::PrivateLinkage, ctx.storage->prefix + name, ctx.storage->module);
-
-    auto *ft = new MFunctionType(rt);
-    ft->retType = retType->codegen(&ctx);
-    _ctx->bindValue(name, new MValue({
-                ft,
-                F
-        }));
-
-    // Create a new basic block to start insertion into.
-    BasicBlock *BB = BasicBlock::Create(getGlobalContext(), "entry", F);
-    Builder.SetInsertPoint(BB);
-
-    Function::arg_iterator arg = F->arg_begin();
-    for( size_t i = 0; i < this->args->namedValues.size(); i++, arg++ ) {
-        auto v = this->args->namedValues[i];
-        ctx.bindValue(v.first, new MValue({types[i],arg}));
-    }
-
-    stmts->collectAlloc(&ctx);
-    stmts->codegen(&ctx);
-}
 void MatchAssignStmt::codegen(Context *ctx) {
     Function *TheFunction = Builder.GetInsertBlock()->getParent();
     MValue* incoming = src->codegen(ctx);
@@ -295,4 +249,12 @@ void StatementList::codegen(Context *ctx) {
 void StatementList::collectAlloc(Context *ctx) {
     for( auto *s : *this )
         s->collectAlloc(ctx);
+}
+
+MValueType* MNameTypeAST::codegen(Context *ctx) {
+    if (name == "int")
+        return new IntType(llvm::Type::getInt64Ty(ctx->storage->module->getContext()));
+    else if (name == "String")
+        return StringType::create(ctx);
+    return ctx->storage->types[name];
 }

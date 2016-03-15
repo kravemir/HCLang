@@ -22,6 +22,8 @@
  */
 #include "binop.h"
 
+#include <ast/types/string.h>
+
 using namespace llvm;
 
 MValueType* BinaryOpAST::calculateType(Context* ctx) {

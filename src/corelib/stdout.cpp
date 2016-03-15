@@ -28,6 +28,7 @@
 
 #include <ast/declarations/slot.h>
 #include <ast/declarations/system.h>
+#include <ast/types/string.h>
 
 using namespace llvm;
 

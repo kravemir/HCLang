@@ -20,31 +20,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_AST_H
-#define HCLANG_AST_AST_H
+#ifndef HCLANG_AST_DECLARATIONS_FUNCTION_H
+#define HCLANG_AST_DECLARATIONS_FUNCTION_H
 
-#include "base.h"
+#include <ast/base.h>
 
-#include "declarations/system.h"
-#include "declarations/slot.h"
-#include "declarations/procedure.h"
-#include "declarations/function.h"
+class FunctionDecl : public Statement {
+public:
+    FunctionDecl( std::string name, MTupleTypeAST *args, StatementList *list, MTypeAST *retType ):
+            name(name),
+            args(args),
+            stmts(list),
+            retType(retType)
+    {}
 
-#include "types/array.h"
-#include "types/tuple.h"
-#include "types/union.h"
-#include "types/string.h"
+    virtual void codegen(Context *ctx);
+    virtual void collectAlloc ( Context* ctx ) {}
 
-#include "statements/let.h"
-#include "statements/send.h"
-#include "statements/expr.h"
-#include "statements/return.h"
-#include "statements/for.h"
-#include "statements/var.h"
+    virtual void print(Printer &p) const;
+private:
+    std::string name;
+    MTupleTypeAST *args;
+    StatementList *stmts;
+    MTypeAST *retType;
+};
 
-#include "expressions/binop.h"
-#include "expressions/call.h"
-#include "expressions/cond.h"
-#include "expressions/getchild.h"
-
-#endif // HCLANG_AST_AST_H
+#endif //HCLANG_AST_DECLARATIONS_FUNCTION_H

@@ -20,31 +20,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef HCLANG_AST_AST_H
-#define HCLANG_AST_AST_H
+#include "string.h"
 
-#include "base.h"
+StringType *StringType::create(Context *ctx) {
+    return new StringType(
+            llvm::Type::getInt8PtrTy(ctx->storage->module->getContext()),
+            ctx->storage->module->getFunction("my_sprintf")
+    );
+}
 
-#include "declarations/system.h"
-#include "declarations/slot.h"
-#include "declarations/procedure.h"
-#include "declarations/function.h"
+MValue * StringType::createCast(Context *ctx, MValue *src) {
+    // don't cast, check type
+    assert( dynamic_cast<StringType*>(src->type) );
+    return src;
+}
 
-#include "types/array.h"
-#include "types/tuple.h"
-#include "types/union.h"
-#include "types/string.h"
+MValue * StringType::getChild(MValue *src, std::string name) {
+    if(name == "format") {
+        MethodReferenceType *mrt = MethodReferenceType::create(this,F->getFunctionType());
+        return mrt->createValue(src,F);
+    }
+    return 0;
+}
 
-#include "statements/let.h"
-#include "statements/send.h"
-#include "statements/expr.h"
-#include "statements/return.h"
-#include "statements/for.h"
-#include "statements/var.h"
-
-#include "expressions/binop.h"
-#include "expressions/call.h"
-#include "expressions/cond.h"
-#include "expressions/getchild.h"
-
-#endif // HCLANG_AST_AST_H
+MValueType* StringType::getChildType(std::string name) {
+    if(name == "format") {
+        return MethodReferenceType::create(this,F->getFunctionType());
+    }
+    return 0;
+}

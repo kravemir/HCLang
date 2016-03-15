@@ -36,10 +36,12 @@ set ( HCLANG_SRCS
     ast/declarations/system.cpp
     ast/declarations/slot.cpp
     ast/declarations/procedure.cpp
+    ast/declarations/function.cpp
 
     ast/types/array.cpp
     ast/types/tuple.cpp
     ast/types/union.cpp
+    ast/types/string.cpp
 
     ast/statements/for.cpp
     ast/statements/var.cpp
@@ -51,6 +53,7 @@ set ( HCLANG_SRCS
     ast/expressions/binop.cpp
     ast/expressions/call.cpp
     ast/expressions/cond.cpp
+    ast/expressions/getchild.cpp
 
     corelib/stdout.cpp
     corelib/async_io.cpp
@@ -67,10 +70,12 @@ set ( HCLANG_HEADERS
     ast/declarations/system.h
     ast/declarations/slot.h
     ast/declarations/procedure.h
+    ast/declarations/function.h
 
     ast/types/array.h
     ast/types/tuple.h
     ast/types/union.h
+    ast/types/string.h
 
     ast/statements/for.h
     ast/statements/var.h
@@ -82,6 +87,7 @@ set ( HCLANG_HEADERS
     ast/expressions/binop.h
     ast/expressions/call.h
     ast/expressions/cond.h
+    ast/expressions/getchild.h
 
     corelib/stdout.h
     corelib/async_io.h
