@@ -4,11 +4,11 @@
 
 #ifndef PROJECT_CMDOPTIONS_H
 #define PROJECT_CMDOPTIONS_H
-struct CommandOptionCode
-{
-    enum
-    {
+
+struct CommandOptionCode {
+    enum {
         PRINT_LLVM_IR = 1,
+        PRINT_AST = 2,
     };
 };
 

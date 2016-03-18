@@ -18,3 +18,4 @@ struct CommandOption {
 };
 %%
 --print-llvm-ir, CommandOptionCode::PRINT_LLVM_IR
+--print-ast, CommandOptionCode::PRINT_AST

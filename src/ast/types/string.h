@@ -44,7 +44,6 @@ struct MethodReferenceType : MValueType {
                 { 1 },
                 "methodref.method"
         );
-        val_with_method->dump();
         return new MValue(this,val_with_method,false);
     }
 

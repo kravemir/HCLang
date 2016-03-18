@@ -80,7 +80,6 @@ MValue* SystemType::getChild(MValue *src, std::string name) {
             { 1 },
             "slotref.msgid"
         );
-        val_with_msgid->dump();
         return new MValue(slotTypes[i],val_with_msgid,false);
     }
 
@@ -159,8 +158,10 @@ void SystemDecl::codegen(Context *_ctx) {
     Type* systemPtrType = PointerType::get(systemType,0);
 
     t->_llvmType = systemPtrType;
+    /* TODO: dump system type cmd option
     systemType->dump();
     systemPtrType->dump();
+    */
 
     for(Statement *s : *stmts)
         s->codegen(&ctx);

@@ -113,6 +113,9 @@ struct ContextStorage {
     SystemType *system;
     llvm::Module *module;
     std::string prefix;
+
+    // TODO: refactor
+    bool print_llvm_ir = false;
 };
 
 class Block {
