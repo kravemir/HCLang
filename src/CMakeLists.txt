@@ -111,6 +111,16 @@ add_custom_command(
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
+# TODO: move out to own target / sub-project / sub-directory
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/cmdoptions.hpp
+    COMMAND gperf -CG -L C++ -t ${CMAKE_CURRENT_SOURCE_DIR}/cmdoptions.gperf > cmdoptions.hpp
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/cmdoptions.gperf
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+set_source_files_properties(astdebug_main.cpp PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/cmdoptions.hpp)
+
 add_executable( lexdebug lexdebug_main.cpp)
 target_link_libraries( lexdebug HCLang ${llvm_libs} )
 
@@ -128,6 +138,5 @@ else()
     message(FATAL_ERROR "AIO Library not found")
 endif()
 
-
-add_executable( astdebug astdebug_main.cpp decl.cpp)
+add_executable( astdebug astdebug_main.cpp decl.cpp )
 target_link_libraries( astdebug HCLang ${AIO_LIBRARY} ${llvm_libs} rt pthread )

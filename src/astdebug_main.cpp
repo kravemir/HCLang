@@ -56,6 +56,7 @@
 #include "base.hpp"
 
 #include "corelib/async_io.h"
+#include "cmdoptions.hpp"
 
 using namespace std;
 using namespace llvm;
@@ -103,6 +104,17 @@ extern unsigned int decl_ll_len;
 
 int main(int argc, char **argv)
 {
+    for(int i = 0; i < argc; i++) {
+        const CommandOption *option = CmdHash::InValidOptions(argv[i],strlen(argv[i]));
+        if(option) {
+            switch (option->code) {
+            case CommandOptionCode::PRINT_LLVM_IR:
+                std::cout<< "Printing LLVM IR\n";
+                break;
+            }
+        }
+    }
+
     InitializeNativeTarget();
     InitializeNativeTargetAsmPrinter();
     InitializeNativeTargetAsmParser();
