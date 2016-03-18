@@ -1,0 +1,21 @@
+%{
+#include "cmdoptions.h"
+#include <cstring>
+
+typedef struct CommandOptionCode CommandOptionCode;
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-register"
+%}
+
+%define class-name CmdHash
+%define lookup-function-name InValidOptions
+
+
+struct CommandOption {
+  const char *name;
+  int code;
+};
+%%
+--print-llvm-ir, CommandOptionCode::PRINT_LLVM_IR
+--print-ast, CommandOptionCode::PRINT_AST

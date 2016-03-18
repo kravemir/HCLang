@@ -25,7 +25,6 @@
 using namespace llvm;
 
 MValue* MArrayType::getChild(MValue *src, std::string name) {
-    src->value()->dump();
     Value * val = Builder.CreateLoad(
         Builder.CreateGEP(
             //Type::getInt64Ty(lctx),

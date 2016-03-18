@@ -56,6 +56,7 @@
 #include "base.hpp"
 
 #include "corelib/async_io.h"
+#include "cmdoptions.hpp"
 
 using namespace std;
 using namespace llvm;
@@ -101,26 +102,52 @@ extern "C" {
 extern unsigned char decl_ll[];
 extern unsigned int decl_ll_len;
 
-int main(int argc, char **argv)
-{
+struct CommandArguments {
+    bool f_print_llvm_ir = false;
+    bool f_print_ast = false;
+
+    std::vector<std::string> input_files;
+};
+
+int main(int argc, char **argv) {
+    CommandArguments commandArguments;
+
+    for(int i = 1; i < argc; i++) {
+        const CommandOption *option = CmdHash::InValidOptions(argv[i],strlen(argv[i]));
+        if(option) {
+            switch (option->code) {
+                case CommandOptionCode::PRINT_LLVM_IR:
+                    commandArguments.f_print_llvm_ir = true;
+                    break;
+                case CommandOptionCode::PRINT_AST:
+                    commandArguments.f_print_ast = true;
+                    break;
+            }
+        } else {
+            commandArguments.input_files.push_back({argv[i]});
+        }
+    }
+
     InitializeNativeTarget();
     InitializeNativeTargetAsmPrinter();
     InitializeNativeTargetAsmParser();
 
     executor = mtexecutor_new();
 
-    vector<Token> tokens = lexerFile(argv[1]);
+    vector<Token> tokens = lexerFile(commandArguments.input_files[0].c_str());
 
     Parser parser(tokens, &std::cout);
     StatementList * list = parser.file();
 
-    Printer p(std::cout);
-    cout << "Statements " << list->size() << endl;
-    for( Statement *s : *list )
-        s->print(p);
-    std::cerr.flush();
-    std::cout.flush();
-    usleep(10000);
+    if(commandArguments.f_print_ast) {
+        Printer p(std::cout);
+        cout << "Statements " << list->size() << endl;
+        for (Statement *s : *list)
+            s->print(p);
+        std::cerr.flush();
+        std::cout.flush();
+        usleep(10000);
+    }
 
     llvm::LLVMContext &llvmContext = llvm::getGlobalContext();
     SMDiagnostic error;
@@ -141,6 +168,7 @@ int main(int argc, char **argv)
 
     ContextStorage  s;
     Context         ctx(&s);
+    s.print_llvm_ir = commandArguments.f_print_llvm_ir;
 
     std::string ErrStr;
     TheExecutionEngine =

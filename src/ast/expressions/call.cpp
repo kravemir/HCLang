@@ -47,7 +47,6 @@ void CallExpr::preCodegen(Context *ctx) {
         BasicBlock *BB = BasicBlock::Create(getGlobalContext(), "await_continue");
         int awaitId = ctx->addAwaitId(BB);
         MValue *ma = val->codegen(ctx);
-        ma->value()->dump();
         Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(lctx));
         args->preCodegen(ctx);
 
@@ -78,14 +77,13 @@ void CallExpr::preCodegen(Context *ctx) {
 
 
         Function *finit = ctx->storage->module->getFunction("system_putMsg");
-        ma->value()->dump();
         std::vector<llvm::Value*> aadices(
                 {
                         Builder.CreateExtractValue(ma->value(), {0}, "await_send_system"),
                         Builder.CreateExtractValue(ma->value(), {1}, "await_send_slot"),
                         v_args ? v_args->value() : zero
                 });
-        Builder.CreateCall(finit,aadices)->dump();
+        Builder.CreateCall(finit,aadices);
         Builder.CreateRetVoid();
 
         TheFunction->getBasicBlockList().push_back(BB);

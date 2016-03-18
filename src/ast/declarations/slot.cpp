@@ -33,7 +33,7 @@ SlotType* SlotType::create ( Context *ctx, TupleType* argsType, MValueType *retu
         //argsType->llvmType()
     }, "slot" );
 
-    ((PointerType*)argsType->llvmType())->getElementType()->dump();
+    // TODO debug types option: ((PointerType*)argsType->llvmType())->getElementType()->dump();
     SlotType * type = new SlotType ( st, argsType, returnType );
     type->putMsgFn = ctx->storage->module->getFunction("system_putMsg");
 
@@ -116,7 +116,11 @@ void SlotDecl::codegen ( Context *_ctx ) {
 
     Builder.CreateRetVoid();
     s->slots.push_back ( F );
-    F->dump();
+
+    if(ctx.storage->print_llvm_ir) {
+        fprintf(stderr,"DUMP: slot %s:\n",this->name.c_str());
+        F->dump();
+    }
 }
 void SlotDecl::collectSystemDecl ( Context *ctx ) const {
     SystemType *s = ctx->storage->system;
@@ -155,7 +159,6 @@ bool SlotContext::doCustomReturn(MValue *value) {
         Function *finit = storage->module->getFunction("system_putMsg");
         Function* TheFunction = Builder.GetInsertBlock()->getParent();
         Value *ma = ++(TheFunction->arg_begin());
-        ma->getType()->dump();
         std::vector<llvm::Value*> aadices(
                 {
                         Builder.CreateLoad(Builder.CreateGEP(

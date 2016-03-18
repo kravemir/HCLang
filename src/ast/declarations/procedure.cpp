@@ -91,12 +91,15 @@ void ProcedureDecl::codegen(Context *_ctx) {
 
         Builder.CreateRetVoid();
 
-        F->dump();
+        if(ctx.storage->print_llvm_ir) {
+            fprintf(stderr,"DUMP: procedure %s:",this->name.c_str());
+            F->dump();
+        }
     } else {
         ProcedureContext ctx (_ctx);
         TupleType *args_tuple_type = TupleType::create(args_types, name + ".args_tuple" );
-        ((PointerType*)args_tuple_type->llvmType())->getTypeAtIndex((unsigned)0)->dump();
-        args_tuple_type->llvmType()->dump();
+        //((PointerType*)args_tuple_type->llvmType())->getTypeAtIndex((unsigned)0)->dump();
+        //args_tuple_type->llvmType()->dump();
 
 
         std::vector<Type*> types({ ctx.storage->module->getTypeByName("struct.System"), IntType::create(&ctx)->llvmType() });
@@ -183,7 +186,9 @@ void ProcedureDecl::codegen(Context *_ctx) {
                 Builder.CreateBr(BStart);
             }
 
-            process_fn->dump();
+            if(ctx.storage->print_llvm_ir) {
+                process_fn->dump();
+            }
         }
 
         GlobalVariable *vtable;
@@ -211,7 +216,7 @@ void ProcedureDecl::codegen(Context *_ctx) {
                 format_const,
                 ctx.storage->prefix + name  + ".vtable"
             );
-            vtable->dump();
+            // TODO option debug async procedures: vtable->dump();
         }
 
         {
