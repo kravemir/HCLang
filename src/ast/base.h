@@ -60,9 +60,11 @@ struct MValueType {
     virtual ~MValueType() {};
 
     virtual MValueType* getChildType(std::string name) { assert( 0 && "Type doesn't have children"); return 0; };
+    virtual MValueType* getIndexChildType(int index) { assert(0 && "Type doesn't have indexed children"); return 0; };
 
     virtual MValue* getChild(MValue *src, std::string name) { return 0; }
-    virtual MValue* getArrayChild(MValue *src, llvm::Value *index) { return 0; }
+    virtual MValue* getIndexChild(MValue *src, llvm::Value *index) { return 0; }
+    virtual MValue* getArrayChild(MValue *src, llvm::Value *index) { return getIndexChild(src,index); }
 
     virtual std::pair<llvm::Value*,MValue*> matchCond(std::string targetName, MValue* src, Context *ctx) { return {0,0}; }
 

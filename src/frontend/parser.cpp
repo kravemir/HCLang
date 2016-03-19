@@ -498,10 +498,16 @@ Q_TRAILER:
             {
                 TupleAST    *call = tuple();
                 val = new CallExpr(val,call);
-                break;
+                goto Q_TRAILER;
             }
-      /*  case Token::LEFT_BRACKET:
-            return 0; // TODO*/
+        case Token::OPEN_BRACKET:
+            {
+                consume();
+                MValueAST *index = value();
+                expectConsume(Token::CLOSE_BRACKET);
+                val = new GetIndexChildAST(val,index);
+                goto Q_TRAILER;
+            }
         case Token::DOT:
             consume();
             val = new GetChildAST(val,currentConsume().str_val); // TODO

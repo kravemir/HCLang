@@ -41,4 +41,20 @@ private:
     std::string name;
 };
 
+class GetIndexChildAST : public MValueAST {
+public:
+    GetIndexChildAST(MValueAST *val, MValueAST *index):
+            val(val),
+            index(index)
+    {}
+
+    virtual MValueType* calculateType(Context *ctx);
+    virtual MValue* codegen(Context *ctx, MValueType *type = 0);
+    virtual std::string toString() const { return val->toString() + "[" + index->toString() + "]"; }
+
+private:
+    MValueAST *val;
+    MValueAST *index;
+};
+
 #endif //HCLANG_AST_EXPRESSIONS_GETCHILD_H

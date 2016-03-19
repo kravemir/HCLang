@@ -33,3 +33,16 @@ MValue* GetChildAST::codegen(Context *ctx, MValueType *type) {
     assert(child);
     return child;
 }
+
+MValueType* GetIndexChildAST::calculateType(Context *ctx) {
+    MValueType *t = val->calculateType(ctx);
+    assert(t);
+    // TODO: check whether index is constant then use it, otherwise exception
+    return t->getIndexChildType(0);
+};
+MValue* GetIndexChildAST::codegen(Context *ctx, MValueType *type) {
+    MValue *target = val->codegen(ctx);
+    MValue *child = target->type->getIndexChild(target,index->codegen(ctx)->value());
+    assert(child);
+    return child;
+}

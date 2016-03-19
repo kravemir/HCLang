@@ -38,7 +38,7 @@ struct MArrayType : MValueType {
     }
 
     virtual MValue* getChild(MValue *src, std::string name);
-    virtual MValue* getArrayChild(MValue *src, llvm::Value *index);
+    virtual MValue* getIndexChild(MValue *src, llvm::Value *index);
     virtual llvm::Type* llvmType() const {
         return type;
     }

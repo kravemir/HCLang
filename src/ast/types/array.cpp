@@ -37,7 +37,7 @@ MValue* MArrayType::getChild(MValue *src, std::string name) {
     );
     return new MValue(elementType, val); 
 }
-MValue* MArrayType::getArrayChild(MValue *src, llvm::Value *idx) { 
+MValue* MArrayType::getIndexChild(MValue *src, llvm::Value *idx) {
     Value * val = Builder.CreateLoad(
         Builder.CreateGEP(
             src->value(),
