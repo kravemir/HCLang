@@ -35,7 +35,7 @@ void SendStmt::codegen(Context *ctx) {
     MValue *v_args = args->codegen(ctx);
     MValue *ma = ctx->getVariable(target[0]); // TODO
     for(size_t i = 1; i < target.size(); i++ ) {
-        assert(ma || "Error ma");
+        assert(ma && "Error ma");
         ma = ma->type->getChild(ma,target[i]);
     }
     if(!ma) {

@@ -1,10 +1,10 @@
-procedure print_normal(str : String):
+procedure print_normal(stdout : StdOut, str : String):
     stdout.println ! ( str )
 
-procedure print_async(str : String) async:
+procedure print_async(stdout : StdOut, str : String) async:
     stdout.println ! (str)
 
 procedure main():
-    print_normal("1st print")
-    spawn print_async ("2nd print")
-    print_normal("3rd print")
+    print_normal(stdout, "1st print")
+    spawn print_async (stdout, "2nd print")
+    print_normal(stdout, "3rd print")
