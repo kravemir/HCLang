@@ -450,8 +450,6 @@ std::vector<Token> lexerFile(const char *fname)
     fclose(f);
     data[fsize] = 0;
 
-    fprintf(stderr,"%ld\n",fsize);
-
     std::vector<Token> tokens = lexerBuf(data,fsize);
 
     delete []data;

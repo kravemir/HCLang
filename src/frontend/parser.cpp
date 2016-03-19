@@ -300,7 +300,6 @@ FunctionDecl*    Parser::functionDecl() {
 
 Q_SHORT_DEF:
     {
-        std::cerr << "Short def\n";
         expectConsume(Token::SHORT_DEF);
         MValueAST* val = value();
         StatementList *stmts = new StatementList;
